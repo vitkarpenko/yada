@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"math/rand"
 	"os"
-	"os/signal"
-	"syscall"
+	"time"
+	"yada/internal"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/diamondburned/arikawa/v2/bot"
 	"github.com/joho/godotenv"
 )
 
@@ -17,10 +17,14 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	token := os.Getenv("YADA_TOKEN")
+	rand.Seed(time.Now().UTC().UnixNano())
 
-	discord, err := discordgo.New("Bot " + token)
-	if err != nil {
-		log.Fatal(err)
-	}
+	bot.Run(
+		os.Getenv("YADA_TOKEN"),
+		&internal.Bot{},
+		func(ctx *bot.Context) error {
+			ctx.HasPrefix = bot.NewPrefix("!")
+			return nil
+		},
+	)
 }
