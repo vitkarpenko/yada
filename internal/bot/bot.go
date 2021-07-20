@@ -13,7 +13,7 @@ const loadMessagesLimit = 100
 
 type Yada struct {
 	Commands             Commands
-	MessageReactHandlers []messageReactHandler
+	MessageReactHandlers []func(s *discordgo.Session, m *discordgo.MessageCreate)
 	Discord              *discordgo.Session
 	Images               map[string]*discordgo.MessageAttachment
 	Config               config.Config
@@ -27,7 +27,7 @@ func NewYada(cfg config.Config) *Yada {
 
 	yada := &Yada{
 		Commands:             InitializeCommands(),
-		MessageReactHandlers: []messageReactHandler{ReactWithImage},
+		MessageReactHandlers: []func(s *discordgo.Session, m *discordgo.MessageCreate){ReactWithImage},
 		Discord:              discordSession,
 		Images:               map[string]*discordgo.MessageAttachment{},
 		Config:               cfg,
@@ -73,12 +73,14 @@ func (y *Yada) setupCommands() {
 }
 
 func (y *Yada) setupHandlers() {
+	// Add slash commands handlers.
 	y.Discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if c, ok := y.Commands[i.ApplicationCommandData().Name]; ok {
 			c.Handler(s, i)
 		}
 	})
 
+	// Add other handlers.
 	for _, handler := range y.MessageReactHandlers {
 		y.Discord.AddHandler(handler)
 	}
