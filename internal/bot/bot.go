@@ -1,12 +1,15 @@
 package bot
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
 
+	"github.com/bwmarrin/discordgo"
+
 	"yada/internal/config"
 )
+
+const loadMessagesLimit = 100
 
 type Yada struct {
 	Commands Commands
@@ -76,15 +79,31 @@ func (y *Yada) setupHandlers() func() {
 }
 
 func (y *Yada) loadImages() {
-	messages, err := y.Discord.ChannelMessages(y.Config.ImagesChannelID, 0, "", "", "")
-	if err != nil {
-		log.Fatalln("Could not load images from image channel!", err)
-	}
+	var currentLastID string
 
-	for _, message := range messages {
-		triggerWords := strings.Split(message.Content, " ")
-		for _, w := range triggerWords {
-			y.Images[w] = message.Attachments[0]
+	for {
+		messages, err := y.Discord.ChannelMessages(
+			y.Config.ImagesChannelID,
+			loadMessagesLimit,
+			"",
+			currentLastID,
+			"",
+		)
+		if err != nil {
+			log.Fatalln("Could not load images from image channel!", err)
 		}
+
+		for _, message := range messages {
+			triggerWords := strings.Split(message.Content, " ")
+			for _, w := range triggerWords {
+				y.Images[w] = message.Attachments[0]
+			}
+		}
+
+		if len(messages) < loadMessagesLimit {
+			break
+		}
+
+		currentLastID = messages[len(messages)-1].ID
 	}
 }
