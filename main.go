@@ -2,16 +2,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
 	"log"
 	"math/rand"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-	"yada/internal/commands"
-
-	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
+	"yada/internal/bot"
 )
 
 func main() {
@@ -30,31 +29,41 @@ func main() {
 
 	discord.Identify.Intents = discordgo.IntentsGuildMessages
 
-	discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := commands.Handlers[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
-		}
-	})
-
 	err = discord.Open()
 	if err != nil {
 		log.Fatalln("Couldn't open websocket connection to discord!", err)
 	}
+	defer discord.Close()
 
-	for _, v := range commands.Commands {
-		fmt.Println(v.Name)
-		_, err = discord.ApplicationCommandCreate(discord.State.User.ID, "405287350298738689", v)
-		if err != nil {
-			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
-		}
-	}
+	commands := bot.InitializeCommands()
+	setupCommands(discord, commands)
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
+}
 
-	// Cleanly close down the Discord session.
-	discord.Close()
+func setupCommands(discord *discordgo.Session, commands bot.Commands) {
+	createApplicationCommands(discord, commands)
+	setupHandlers(discord, commands)
+}
+
+func createApplicationCommands(discord *discordgo.Session, commands bot.Commands) {
+	for _, c := range commands {
+		slashCommand := &c.AppCommand
+		_, err := discord.ApplicationCommandCreate(discord.State.User.ID, os.Getenv("GUILD_ID"), slashCommand)
+		if err != nil {
+			log.Panicf("Cannot create '%v' command: %v", slashCommand.Name, err)
+		}
+	}
+}
+
+func setupHandlers(discord *discordgo.Session, commands bot.Commands) func() {
+	return discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		if c, ok := commands[i.ApplicationCommandData().Name]; ok {
+			c.Handler(s, i)
+		}
+	})
 }
