@@ -10,8 +10,8 @@ type Command struct {
 // Commands maps command names to Command instances.
 type Commands map[string]Command
 
-func InitializeCommands() Commands {
-	return Commands{
+func (y *Yada) InitializeCommands() {
+	y.Commands = Commands{
 		"choice": Command{
 			AppCommand: discordgo.ApplicationCommand{
 				Name:        "choice",
@@ -25,7 +25,7 @@ func InitializeCommands() Commands {
 					},
 				},
 			},
-			Handler: Choice,
+			Handler: y.PrepareChoiceHandler(),
 		},
 	}
 }

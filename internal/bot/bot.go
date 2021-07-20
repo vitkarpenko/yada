@@ -26,8 +26,7 @@ func NewYada(cfg config.Config) *Yada {
 	}
 
 	yada := &Yada{
-		Commands:             InitializeCommands(),
-		MessageReactHandlers: []func(s *discordgo.Session, m *discordgo.MessageCreate){ReactWithImage},
+		MessageReactHandlers: []func(s *discordgo.Session, m *discordgo.MessageCreate){},
 		Discord:              discordSession,
 		Images:               map[string]*discordgo.MessageAttachment{},
 		Config:               cfg,
@@ -59,6 +58,8 @@ func (y *Yada) setupIntents() {
 }
 
 func (y *Yada) setupCommands() {
+	y.InitializeCommands()
+
 	for _, c := range y.Commands {
 		appCommand := &c.AppCommand
 		_, err := y.Discord.ApplicationCommandCreate(
@@ -81,6 +82,7 @@ func (y *Yada) setupHandlers() {
 	})
 
 	// Add other handlers.
+	y.PrepareReactWithImageHandler()
 	for _, handler := range y.MessageReactHandlers {
 		y.Discord.AddHandler(handler)
 	}
