@@ -17,7 +17,7 @@ func Choice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: fmt.Sprintf(
-				"Выбирал из списка `%s` и выбрал: **%s**. А сам ты не мог справиться?",
+				"Выбирал из списка `%s` и выбрал: **%s**.",
 				message,
 				strings.TrimSpace(words[randIndex]),
 			),
