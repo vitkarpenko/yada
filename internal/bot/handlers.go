@@ -8,6 +8,9 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type commandHandler func(s *discordgo.Session, i *discordgo.InteractionCreate)
+type messageReactHandler func(s *discordgo.Session, m *discordgo.MessageCreate)
+
 func Choice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	message := i.ApplicationCommandData().Options[0].StringValue()
 	words := strings.Split(message, ",")
@@ -23,4 +26,12 @@ func Choice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			),
 		},
 	})
+}
+
+func ReactWithImage(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	// Ignore all messages created by the bot itself.
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
 }

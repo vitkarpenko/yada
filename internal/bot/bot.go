@@ -12,10 +12,11 @@ import (
 const loadMessagesLimit = 100
 
 type Yada struct {
-	Commands Commands
-	Discord  *discordgo.Session
-	Images   map[string]*discordgo.MessageAttachment
-	Config   config.Config
+	Commands             Commands
+	MessageReactHandlers []messageReactHandler
+	Discord              *discordgo.Session
+	Images               map[string]*discordgo.MessageAttachment
+	Config               config.Config
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -25,10 +26,11 @@ func NewYada(cfg config.Config) *Yada {
 	}
 
 	yada := &Yada{
-		Commands: InitializeCommands(),
-		Discord:  discordSession,
-		Images:   map[string]*discordgo.MessageAttachment{},
-		Config:   cfg,
+		Commands:             InitializeCommands(),
+		MessageReactHandlers: []messageReactHandler{ReactWithImage},
+		Discord:              discordSession,
+		Images:               map[string]*discordgo.MessageAttachment{},
+		Config:               cfg,
 	}
 
 	yada.setupIntents()
@@ -70,12 +72,16 @@ func (y *Yada) setupCommands() {
 	}
 }
 
-func (y *Yada) setupHandlers() func() {
-	return y.Discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (y *Yada) setupHandlers() {
+	y.Discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if c, ok := y.Commands[i.ApplicationCommandData().Name]; ok {
 			c.Handler(s, i)
 		}
 	})
+
+	for _, handler := range y.MessageReactHandlers {
+		y.Discord.AddHandler(handler)
+	}
 }
 
 func (y *Yada) loadImages() {
