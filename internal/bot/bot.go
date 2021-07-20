@@ -3,6 +3,7 @@ package bot
 import (
 	"github.com/bwmarrin/discordgo"
 	"log"
+	"strings"
 
 	"yada/internal/config"
 )
@@ -10,6 +11,7 @@ import (
 type Yada struct {
 	Commands Commands
 	Discord  *discordgo.Session
+	Images   map[string]*discordgo.MessageAttachment
 	Config   config.Config
 }
 
@@ -22,10 +24,12 @@ func NewYada(cfg config.Config) *Yada {
 	yada := &Yada{
 		Commands: InitializeCommands(),
 		Discord:  discordSession,
+		Images:   map[string]*discordgo.MessageAttachment{},
 		Config:   cfg,
 	}
 
 	yada.setupIntents()
+	yada.loadImages()
 
 	return yada
 }
@@ -69,4 +73,18 @@ func (y *Yada) setupHandlers() func() {
 			c.Handler(s, i)
 		}
 	})
+}
+
+func (y *Yada) loadImages() {
+	messages, err := y.Discord.ChannelMessages(y.Config.ImagesChannelID, 0, "", "", "")
+	if err != nil {
+		log.Fatalln("Could not load images from image channel!", err)
+	}
+
+	for _, message := range messages {
+		triggerWords := strings.Split(message.Content, " ")
+		for _, w := range triggerWords {
+			y.Images[w] = message.Attachments[0]
+		}
+	}
 }
