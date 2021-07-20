@@ -4,7 +4,7 @@ import "github.com/bwmarrin/discordgo"
 
 type Command struct {
 	AppCommand discordgo.ApplicationCommand
-	Handler    func(s *discordgo.Session, i *discordgo.InteractionCreate)
+	Handler    commandHandler
 }
 
 // Commands maps command names to Command instances.
