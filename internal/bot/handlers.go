@@ -41,21 +41,20 @@ func (y *Yada) PrepareReactWithImageHandler() {
 			message := m.Content
 			words := tokenize(message)
 
-			var file *discordgo.File
-			for _, word := range words {
+			var files []*discordgo.File
+			for i, word := range words {
 				if image, ok := y.Images[word]; ok {
-					file = &discordgo.File{
-						Name:        "image.gif",
+					files = append(files, &discordgo.File{
+						Name:        fmt.Sprintf("image_%d.gif", i),
 						ContentType: "image/gif",
 						Reader:      bytes.NewReader(image),
-					}
-					break
+					})
 				}
 			}
 
-			if file != nil {
+			if len(files) != 0 {
 				_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-					File: file,
+					Files: files,
 				})
 				if err != nil {
 					log.Println("Couldn't send an image.", err)
