@@ -56,6 +56,10 @@ func (y *Yada) PrepareReactWithImageHandler() {
 			if imageEmbed != nil {
 				_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 					Embed: &discordgo.MessageEmbed{
+						Author: &discordgo.MessageEmbedAuthor{
+							IconURL: discordgo.EndpointUserAvatar(m.Author.ID, m.Author.Avatar),
+							Name:    m.Author.Username,
+						},
 						Type:  discordgo.EmbedTypeImage,
 						Image: imageEmbed,
 					},
