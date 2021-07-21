@@ -1,1 +1,1 @@
-release: go run main.go
+release: ./bin/yada
