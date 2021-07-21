@@ -65,7 +65,7 @@ func (y *Yada) PrepareReactWithImageHandler() {
 					},
 				})
 				if err != nil {
-					log.Printf("Couldn't send an image.", err)
+					log.Println("Couldn't send an image.", err)
 				}
 			}
 		},
