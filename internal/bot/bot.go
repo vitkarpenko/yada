@@ -58,11 +58,11 @@ func (y *Yada) Run() {
 }
 
 func (y *Yada) loadImagesInBackground() {
-	y.loadImages()
+	y.processImages()
 	ticker := time.NewTicker(20 * time.Second)
 	go func() {
 		for range ticker.C {
-			y.loadImages()
+			y.processImages()
 		}
 	}()
 }
@@ -102,7 +102,7 @@ func (y *Yada) setupHandlers() {
 	}
 }
 
-func (y *Yada) loadImages() {
+func (y *Yada) processImages() {
 	var currentLastID string
 
 	for {
@@ -117,30 +117,7 @@ func (y *Yada) loadImages() {
 			log.Fatalln("Could not load images from image channel!", err)
 		}
 
-		for _, message := range messages {
-			attachments := message.Attachments
-			if len(attachments) == 0 {
-				continue
-			}
-			images := make([][]byte, len(attachments))
-			for _, a := range attachments {
-				response, err := http.Get(a.URL)
-				if err != nil {
-					continue
-				}
-				defer func(Body io.ReadCloser) {
-					_ = Body.Close()
-				}(response.Body)
-				image, _ := io.ReadAll(response.Body)
-				images = append(images, image)
-			}
-			triggerWords := strings.Split(message.Content, " ")
-			for _, w := range triggerWords {
-				for _, i := range images {
-					y.Images[w] = i
-				}
-			}
-		}
+		y.downloadImages(messages)
 
 		if len(messages) < loadMessagesLimit {
 			break
@@ -148,4 +125,39 @@ func (y *Yada) loadImages() {
 
 		currentLastID = messages[len(messages)-1].ID
 	}
+}
+
+func (y *Yada) downloadImages(messages []*discordgo.Message) {
+	for _, message := range messages {
+		attachments := message.Attachments
+		if len(attachments) == 0 {
+			continue
+		}
+		images := make([][]byte, len(attachments))
+		for _, a := range attachments {
+			images = append(images, readImageFromAttach(a))
+		}
+		triggerWords := strings.Split(message.Content, " ")
+		y.setImagesTokens(triggerWords, images)
+	}
+}
+
+func (y *Yada) setImagesTokens(triggerWords []string, images [][]byte) {
+	for _, w := range triggerWords {
+		for _, i := range images {
+			y.Images[w] = i
+		}
+	}
+}
+
+func readImageFromAttach(a *discordgo.MessageAttachment) []byte {
+	response, err := http.Get(a.URL)
+	if err != nil {
+		return nil
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(response.Body)
+	image, _ := io.ReadAll(response.Body)
+	return image
 }
