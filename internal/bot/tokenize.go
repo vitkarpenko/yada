@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-var anySeparatorRegexp = regexp.MustCompile("[^а-яА-Я\\w\\d]+")
+var anySeparatorRegexp = regexp.MustCompile(`[^а-яА-Я\w\d]+`)
 
 // tokenize splits input by any non-alphabetic/non-numeric characters and lowercases tokens.
 func tokenize(message string) []string {
