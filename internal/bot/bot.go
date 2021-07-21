@@ -1,10 +1,10 @@
 package bot
 
 import (
+	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
-
-	"github.com/bwmarrin/discordgo"
+	"time"
 
 	"yada/internal/config"
 )
@@ -33,7 +33,6 @@ func NewYada(cfg config.Config) *Yada {
 	}
 
 	yada.setupIntents()
-	yada.loadImages()
 
 	return yada
 }
@@ -47,10 +46,21 @@ func (y *Yada) Run() {
 		_ = Discord.Close()
 	}(y.Discord)
 
+	y.loadImagesInBackground()
+
 	y.setupCommands()
 	y.setupHandlers()
 
 	waitUntilInterrupted()
+}
+
+func (y *Yada) loadImagesInBackground() {
+	ticker := time.NewTicker(20 * time.Second)
+	go func() {
+		for range ticker.C {
+			y.loadImages()
+		}
+	}()
 }
 
 func (y *Yada) setupIntents() {
