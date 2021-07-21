@@ -1,1 +1,1 @@
-release: ./bin/yada
+worker: ./bin/yada
