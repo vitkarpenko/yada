@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 
@@ -37,7 +38,32 @@ func (y *Yada) PrepareReactWithImageHandler() {
 			}
 
 			message := m.Content
-			_ = tokenize(message)
+			words := tokenize(message)
+
+			var imageEmbed *discordgo.MessageEmbedImage
+			for _, word := range words {
+				if image, ok := y.Images[word]; ok {
+					imageEmbed = &discordgo.MessageEmbedImage{
+						URL:      image.URL,
+						ProxyURL: image.ProxyURL,
+						Width:    image.Width,
+						Height:   image.Height,
+					}
+					break
+				}
+			}
+
+			if imageEmbed != nil {
+				_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+					Embed: &discordgo.MessageEmbed{
+						Type:  discordgo.EmbedTypeImage,
+						Image: imageEmbed,
+					},
+				})
+				if err != nil {
+					log.Printf("Couldn't send an image.", err)
+				}
+			}
 		},
 	)
 }
