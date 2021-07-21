@@ -1,0 +1,1 @@
+release: go run main.go
