@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"bytes"
 	"io"
 	"log"
 	"net/http"
@@ -19,7 +18,7 @@ type Yada struct {
 	Commands             Commands
 	MessageReactHandlers []func(s *discordgo.Session, m *discordgo.MessageCreate)
 	Discord              *discordgo.Session
-	Images               map[string]io.Reader
+	Images               map[string][]byte
 	Config               config.Config
 }
 
@@ -32,7 +31,7 @@ func NewYada(cfg config.Config) *Yada {
 	yada := &Yada{
 		MessageReactHandlers: []func(s *discordgo.Session, m *discordgo.MessageCreate){},
 		Discord:              discordSession,
-		Images:               map[string]io.Reader{},
+		Images:               map[string][]byte{},
 		Config:               cfg,
 	}
 
@@ -123,7 +122,7 @@ func (y *Yada) loadImages() {
 			if len(attachments) == 0 {
 				continue
 			}
-			images := make([]io.ReadWriter, len(attachments))
+			images := make([][]byte, len(attachments))
 			for _, a := range attachments {
 				response, err := http.Get(a.URL)
 				if err != nil {
@@ -132,9 +131,8 @@ func (y *Yada) loadImages() {
 				defer func(Body io.ReadCloser) {
 					_ = Body.Close()
 				}(response.Body)
-				downloadedImage := bytes.NewBuffer([]byte{})
-				_, _ = io.Copy(downloadedImage, response.Body)
-				images = append(images, downloadedImage)
+				image, _ := io.ReadAll(response.Body)
+				images = append(images, image)
 			}
 			triggerWords := strings.Split(message.Content, " ")
 			for _, w := range triggerWords {
