@@ -1,10 +1,14 @@
 package bot
 
 import (
-	"github.com/bwmarrin/discordgo"
+	"bytes"
+	"io"
 	"log"
+	"net/http"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
 
 	"yada/internal/config"
 )
@@ -15,7 +19,7 @@ type Yada struct {
 	Commands             Commands
 	MessageReactHandlers []func(s *discordgo.Session, m *discordgo.MessageCreate)
 	Discord              *discordgo.Session
-	Images               map[string]*discordgo.MessageAttachment
+	Images               map[string]io.Reader
 	Config               config.Config
 }
 
@@ -28,7 +32,7 @@ func NewYada(cfg config.Config) *Yada {
 	yada := &Yada{
 		MessageReactHandlers: []func(s *discordgo.Session, m *discordgo.MessageCreate){},
 		Discord:              discordSession,
-		Images:               map[string]*discordgo.MessageAttachment{},
+		Images:               map[string]io.Reader{},
 		Config:               cfg,
 	}
 
@@ -55,6 +59,7 @@ func (y *Yada) Run() {
 }
 
 func (y *Yada) loadImagesInBackground() {
+	y.loadImages()
 	ticker := time.NewTicker(20 * time.Second)
 	go func() {
 		for range ticker.C {
@@ -114,9 +119,28 @@ func (y *Yada) loadImages() {
 		}
 
 		for _, message := range messages {
+			attachments := message.Attachments
+			if len(attachments) == 0 {
+				continue
+			}
+			images := make([]io.ReadWriter, len(attachments))
+			for _, a := range attachments {
+				response, err := http.Get(a.URL)
+				if err != nil {
+					continue
+				}
+				defer func(Body io.ReadCloser) {
+					_ = Body.Close()
+				}(response.Body)
+				downloadedImage := bytes.NewBuffer([]byte{})
+				_, _ = io.Copy(downloadedImage, response.Body)
+				images = append(images, downloadedImage)
+			}
 			triggerWords := strings.Split(message.Content, " ")
 			for _, w := range triggerWords {
-				y.Images[w] = message.Attachments[0]
+				for _, i := range images {
+					y.Images[w] = i
+				}
 			}
 		}
 

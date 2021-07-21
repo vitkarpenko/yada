@@ -40,29 +40,21 @@ func (y *Yada) PrepareReactWithImageHandler() {
 			message := m.Content
 			words := tokenize(message)
 
-			var imageEmbed *discordgo.MessageEmbedImage
+			var files []*discordgo.File
 			for _, word := range words {
 				if image, ok := y.Images[word]; ok {
-					imageEmbed = &discordgo.MessageEmbedImage{
-						URL:      image.URL,
-						ProxyURL: image.ProxyURL,
-						Width:    image.Width,
-						Height:   image.Height,
-					}
+					files = append(files, &discordgo.File{
+						Name:        "image.gif",
+						ContentType: "image/gif",
+						Reader:      image,
+					})
 					break
 				}
 			}
 
-			if imageEmbed != nil {
+			if len(files) != 0 {
 				_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-					Embed: &discordgo.MessageEmbed{
-						Author: &discordgo.MessageEmbedAuthor{
-							IconURL: discordgo.EndpointUserAvatar(m.Author.ID, m.Author.Avatar),
-							Name:    m.Author.Username,
-						},
-						Type:  discordgo.EmbedTypeImage,
-						Image: imageEmbed,
-					},
+					Files: files,
 				})
 				if err != nil {
 					log.Println("Couldn't send an image.", err)
