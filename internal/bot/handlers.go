@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"math/rand"
@@ -40,21 +41,21 @@ func (y *Yada) PrepareReactWithImageHandler() {
 			message := m.Content
 			words := tokenize(message)
 
-			var files []*discordgo.File
+			var file *discordgo.File
 			for _, word := range words {
 				if image, ok := y.Images[word]; ok {
-					files = append(files, &discordgo.File{
+					file = &discordgo.File{
 						Name:        "image.gif",
 						ContentType: "image/gif",
-						Reader:      image,
-					})
+						Reader:      bytes.NewReader(image),
+					}
 					break
 				}
 			}
 
-			if len(files) != 0 {
+			if file != nil {
 				_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-					Files: files,
+					File: file,
 				})
 				if err != nil {
 					log.Println("Couldn't send an image.", err)
