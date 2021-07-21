@@ -10,6 +10,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const imagesPerReactionLimit = 5
+
 func (y *Yada) PrepareChoiceHandler() func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	return func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		message := i.ApplicationCommandData().Options[0].StringValue()
@@ -42,17 +44,20 @@ func (y *Yada) PrepareReactWithImageHandler() {
 			words := tokenize(message)
 
 			var files []*discordgo.File
+			seen := make(map[string]bool)
 			for i, word := range words {
-				if image, ok := y.Images[word]; ok {
+				if image, ok := y.Images[word]; ok && !seen[word] {
 					files = append(files, &discordgo.File{
 						Name:        fmt.Sprintf("image_%d.gif", i),
 						ContentType: "image/gif",
 						Reader:      bytes.NewReader(image),
 					})
+					seen[word] = true
 				}
 			}
 
 			if len(files) != 0 {
+				files = limitFilesCount(files)
 				_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 					Files: files,
 				})
@@ -62,4 +67,11 @@ func (y *Yada) PrepareReactWithImageHandler() {
 			}
 		},
 	)
+}
+
+func limitFilesCount(files []*discordgo.File) []*discordgo.File {
+	if len(files) >= imagesPerReactionLimit {
+		files = files[:imagesPerReactionLimit]
+	}
+	return files
 }
