@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+type Image struct {
+	ID   string
+	Body []byte
+}
+
 func (y *Yada) loadImagesInBackground() {
 	y.processImages()
 	ticker := time.NewTicker(20 * time.Second)
@@ -50,7 +55,7 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 		if len(attachments) == 0 {
 			continue
 		}
-		images := make([][]byte, len(attachments))
+		images := make([]Image, len(attachments))
 		for _, a := range attachments {
 			images = append(images, readImageFromAttach(a))
 		}
@@ -59,7 +64,7 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 	}
 }
 
-func (y *Yada) setImagesTokens(triggerWords []string, images [][]byte) {
+func (y *Yada) setImagesTokens(triggerWords []string, images []Image) {
 	for _, w := range triggerWords {
 		for _, i := range images {
 			y.Images[w] = i
@@ -67,14 +72,17 @@ func (y *Yada) setImagesTokens(triggerWords []string, images [][]byte) {
 	}
 }
 
-func readImageFromAttach(a *discordgo.MessageAttachment) []byte {
+func readImageFromAttach(a *discordgo.MessageAttachment) Image {
 	response, err := http.Get(a.URL)
 	if err != nil {
-		return nil
+		return Image{}
 	}
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(response.Body)
-	image, _ := io.ReadAll(response.Body)
-	return image
+	imageBody, _ := io.ReadAll(response.Body)
+	return Image{
+		ID:   a.ID,
+		Body: imageBody,
+	}
 }

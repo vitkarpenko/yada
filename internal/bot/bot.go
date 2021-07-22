@@ -13,7 +13,7 @@ type Yada struct {
 	Commands             Commands
 	MessageReactHandlers []func(s *discordgo.Session, m *discordgo.MessageCreate)
 	Discord              *discordgo.Session
-	Images               map[string][]byte
+	Images               map[string]Image
 	Config               config.Config
 }
 
@@ -26,7 +26,7 @@ func NewYada(cfg config.Config) *Yada {
 	yada := &Yada{
 		MessageReactHandlers: []func(s *discordgo.Session, m *discordgo.MessageCreate){},
 		Discord:              discordSession,
-		Images:               map[string][]byte{},
+		Images:               map[string]Image{},
 		Config:               cfg,
 	}
 
