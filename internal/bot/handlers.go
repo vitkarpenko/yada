@@ -40,21 +40,8 @@ func (y *Yada) PrepareReactWithImageHandler() {
 				return
 			}
 
-			message := m.Content
-			words := tokenize(message)
-
-			var files []*discordgo.File
-			seen := make(map[string]bool)
-			for i, word := range words {
-				if image, ok := y.Images[word]; ok && !seen[word] {
-					files = append(files, &discordgo.File{
-						Name:        fmt.Sprintf("image_%d.gif", i),
-						ContentType: "image/gif",
-						Reader:      bytes.NewReader(image),
-					})
-					seen[word] = true
-				}
-			}
+			words := tokenize(m.Content)
+			files := getFilesToSend(words, y.Images)
 
 			if len(files) != 0 {
 				files = limitFilesCount(files)
@@ -67,6 +54,30 @@ func (y *Yada) PrepareReactWithImageHandler() {
 			}
 		},
 	)
+}
+
+func getFilesToSend(words []string, images map[string]Image) []*discordgo.File {
+	var files []*discordgo.File
+	seenWords := make(map[string]bool)
+	seenImages := make(map[string]bool)
+	for _, word := range words {
+		if seenWords[word] {
+			continue
+		}
+		if image, ok := images[word]; ok {
+			if seenImages[image.ID] {
+				continue
+			}
+			files = append(files, &discordgo.File{
+				Name:        fmt.Sprintf("image_%s.gif", image.ID),
+				ContentType: "image/gif",
+				Reader:      bytes.NewReader(image.Body),
+			})
+			seenImages[image.ID] = true
+		}
+		seenWords[word] = true
+	}
+	return files
 }
 
 func limitFilesCount(files []*discordgo.File) []*discordgo.File {
