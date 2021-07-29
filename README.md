@@ -3,5 +3,3 @@
 ![](https://goreportcard.com/badge/github.com/vitkarpenko/yada)
 
 🤖 Yet Another Discord Android.
-
-![](images/yada.png)
