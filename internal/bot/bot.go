@@ -17,6 +17,7 @@ type Yada struct {
 	Discord              *discordgo.Session
 	DB                   *gorm.DB
 	Images               map[string]Image
+	Reminders            []postgres.Reminder
 	Config               config.Config
 }
 
@@ -52,6 +53,9 @@ func (y *Yada) Run() {
 	defer func(Discord *discordgo.Session) {
 		_ = Discord.Close()
 	}(y.Discord)
+
+	y.loadReminders()
+	y.checkRemindersInBackground()
 
 	y.loadImagesInBackground()
 
