@@ -1,19 +1,15 @@
 package bot
 
 import (
-	"bytes"
 	"fmt"
-	"log"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
-	"yada/internal/storage/postgres"
 
 	"github.com/bwmarrin/discordgo"
-)
 
-const imagesPerReactionLimit = 5
+	"yada/internal/storage/postgres"
+)
 
 const setRemindersCommand = "!remind"
 
@@ -25,43 +21,6 @@ var durations = map[string]time.Duration{
 	"weeks":   7 * 24 * time.Hour,
 	"months":  30 * 24 * time.Hour,
 	"years":   365 * 24 * time.Hour,
-}
-
-func (y *Yada) ChoiceHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	message := i.ApplicationCommandData().Options[0].StringValue()
-	words := strings.Split(message, ",")
-	randIndex := rand.Intn(len(words))
-
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf(
-				"Выбирал из списка `%s` и выбрал: **%s**.",
-				message,
-				strings.TrimSpace(words[randIndex]),
-			),
-		},
-	})
-}
-
-func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// Ignore all messages created by the bot itself.
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	words := tokenize(m.Content)
-	files := getFilesToSend(words, y.Images)
-
-	if len(files) != 0 {
-		files = limitFilesCount(files)
-		_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Files: files,
-		})
-		if err != nil {
-			log.Println("Couldn't send an image.", err)
-		}
-	}
 }
 
 func (y *Yada) SetReminderHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -119,33 +78,38 @@ func (y *Yada) SetReminderHandler(s *discordgo.Session, m *discordgo.MessageCrea
 	y.DB.Create(&reminder)
 }
 
-func getFilesToSend(words []string, images map[string]Image) []*discordgo.File {
-	var files []*discordgo.File
-	seenWords := make(map[string]bool)
-	seenImages := make(map[string]bool)
-	for _, word := range words {
-		if seenWords[word] {
-			continue
-		}
-		if image, ok := images[word]; ok {
-			if seenImages[image.ID] {
-				continue
-			}
-			files = append(files, &discordgo.File{
-				Name:        fmt.Sprintf("image_%s.gif", image.ID),
-				ContentType: "image/gif",
-				Reader:      bytes.NewReader(image.Body),
-			})
-			seenImages[image.ID] = true
-		}
-		seenWords[word] = true
-	}
-	return files
+func (y *Yada) loadReminders() {
+	y.DB.Find(&y.Reminders)
 }
 
-func limitFilesCount(files []*discordgo.File) []*discordgo.File {
-	if len(files) >= imagesPerReactionLimit {
-		files = files[:imagesPerReactionLimit]
+func (y *Yada) checkRemindersInBackground() {
+	ticker := time.NewTicker(1 * time.Second)
+	go func() {
+		for range ticker.C {
+			y.checkReminders()
+		}
+	}()
+}
+
+func (y *Yada) checkReminders() {
+	for _, reminder := range y.Reminders {
+		if reminder.RemindAt.Before(time.Now()) {
+			y.remind(reminder)
+			y.DB.Delete(&reminder)
+		}
 	}
-	return files
+}
+
+func (y *Yada) remind(reminder postgres.Reminder) {
+	_, _ = y.Discord.ChannelMessageSendComplex(
+		reminder.ChannelID,
+		&discordgo.MessageSend{
+			Content: fmt.Sprintf("<@%s>, ты просил напомнить. :)", reminder.UserID),
+			Reference: &discordgo.MessageReference{
+				MessageID: reminder.MessageID,
+				ChannelID: reminder.ChannelID,
+				GuildID:   y.Config.GuildID,
+			},
+		},
+	)
 }
