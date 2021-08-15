@@ -25,7 +25,7 @@ func (y *Yada) InitializeCommands() {
 					},
 				},
 			},
-			Handler: y.PrepareChoiceHandler(),
+			Handler: y.ChoiceHandler,
 		},
 	}
 }
