@@ -1,12 +1,11 @@
 package postgres
 
 import (
-	"gorm.io/gorm"
 	"time"
 )
 
 type Reminder struct {
-	gorm.Model
+	ID        uint `gorm:"primarykey"`
 	MessageID string
 	UserID    string
 	ChannelID string
