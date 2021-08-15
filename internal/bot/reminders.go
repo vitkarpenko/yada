@@ -57,7 +57,7 @@ func (y *Yada) SetReminderHandler(s *discordgo.Session, m *discordgo.MessageCrea
 	countToken, durationToken := tokens[0], tokens[1]
 	count, err := strconv.ParseInt(countToken, 10, 64)
 	if err != nil || count <= 0 {
-		_, _ = y.Discord.ChannelMessageSend(m.ChannelID, "Первый аргумент должен быть натуральным числом.")
+		_, _ = y.Discord.ChannelMessageSend(m.ChannelID, "Бро, введи нормальное число первым аргументом, а?")
 		return
 	}
 	duration, ok := durations[durationToken]
@@ -71,7 +71,10 @@ func (y *Yada) SetReminderHandler(s *discordgo.Session, m *discordgo.MessageCrea
 
 	_, _ = y.Discord.ChannelMessageSend(
 		m.ChannelID,
-		"Принял! Напомню, не переживай.",
+		fmt.Sprintf(
+			"Дружище, конечно напомню, %s",
+			strings.ToLower(y.Balaboba.GenerateText("напомню")),
+		),
 	)
 
 	reminder := postgres.Reminder{
@@ -112,7 +115,11 @@ func (y *Yada) remind(reminder postgres.Reminder) {
 	_, _ = y.Discord.ChannelMessageSendComplex(
 		reminder.ChannelID,
 		&discordgo.MessageSend{
-			Content: fmt.Sprintf("<@%s>, ты просил напомнить. 🙂", reminder.UserID),
+			Content: fmt.Sprintf(
+				"<@%s>, чувак, напоминаю, %s 🙂",
+				reminder.UserID,
+				strings.ToLower(y.Balaboba.GenerateText("напоминаю")),
+			),
 			Reference: &discordgo.MessageReference{
 				MessageID: reminder.MessageID,
 				ChannelID: reminder.ChannelID,
