@@ -12,13 +12,12 @@ import (
 const loadMessagesLimit = 100
 
 type Yada struct {
-	Commands             Commands
-	MessageReactHandlers []func(s *discordgo.Session, m *discordgo.MessageCreate)
-	Discord              *discordgo.Session
-	DB                   *gorm.DB
-	Images               map[string]Image
-	Reminders            []postgres.Reminder
-	Config               config.Config
+	Commands  Commands
+	Discord   *discordgo.Session
+	DB        *gorm.DB
+	Images    map[string]Image
+	Reminders []postgres.Reminder
+	Config    config.Config
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -33,11 +32,10 @@ func NewYada(cfg config.Config) *Yada {
 	}
 
 	yada := &Yada{
-		MessageReactHandlers: []func(s *discordgo.Session, m *discordgo.MessageCreate){},
-		Discord:              discordSession,
-		DB:                   db,
-		Images:               map[string]Image{},
-		Config:               cfg,
+		Discord: discordSession,
+		DB:      db,
+		Images:  map[string]Image{},
+		Config:  cfg,
 	}
 
 	yada.setupIntents()
