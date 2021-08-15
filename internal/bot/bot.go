@@ -2,7 +2,9 @@ package bot
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"gorm.io/gorm"
 	"log"
+	"yada/internal/storage/postgres"
 
 	"yada/internal/config"
 )
@@ -13,6 +15,7 @@ type Yada struct {
 	Commands             Commands
 	MessageReactHandlers []func(s *discordgo.Session, m *discordgo.MessageCreate)
 	Discord              *discordgo.Session
+	DB                   *gorm.DB
 	Images               map[string]Image
 	Config               config.Config
 }
@@ -23,9 +26,15 @@ func NewYada(cfg config.Config) *Yada {
 		log.Fatalln("Couldn't create discord session!", err)
 	}
 
+	db, err := postgres.NewDB(cfg)
+	if err != nil {
+		log.Fatalln("Couldn't connect to database!", err)
+	}
+
 	yada := &Yada{
 		MessageReactHandlers: []func(s *discordgo.Session, m *discordgo.MessageCreate){},
 		Discord:              discordSession,
+		DB:                   db,
 		Images:               map[string]Image{},
 		Config:               cfg,
 	}
@@ -81,8 +90,6 @@ func (y *Yada) setupHandlers() {
 	})
 
 	// Add other handlers.
-	y.PrepareReactWithImageHandler()
-	for _, handler := range y.MessageReactHandlers {
-		y.Discord.AddHandler(handler)
-	}
+	y.Discord.AddHandler(y.ReactWithImageHandler)
+	y.Discord.AddHandler(y.SetReminderHandler)
 }
