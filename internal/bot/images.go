@@ -1,17 +1,73 @@
 package bot
 
 import (
-	"github.com/bwmarrin/discordgo"
+	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 type Image struct {
 	ID   string
 	Body []byte
+}
+
+const imagesPerReactionLimit = 5
+
+func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// Ignore all messages created by the bot itself.
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	words := tokenize(m.Content)
+	files := getFilesToSend(words, y.Images)
+
+	if len(files) != 0 {
+		files = limitFilesCount(files)
+		_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Files: files,
+		})
+		if err != nil {
+			log.Println("Couldn't send an image.", err)
+		}
+	}
+}
+
+func getFilesToSend(words []string, images map[string]Image) []*discordgo.File {
+	var files []*discordgo.File
+	seenWords := make(map[string]bool)
+	seenImages := make(map[string]bool)
+	for _, word := range words {
+		if seenWords[word] {
+			continue
+		}
+		if image, ok := images[word]; ok {
+			if seenImages[image.ID] {
+				continue
+			}
+			files = append(files, &discordgo.File{
+				Name:        fmt.Sprintf("image_%s.gif", image.ID),
+				ContentType: "image/gif",
+				Reader:      bytes.NewReader(image.Body),
+			})
+			seenImages[image.ID] = true
+		}
+		seenWords[word] = true
+	}
+	return files
+}
+
+func limitFilesCount(files []*discordgo.File) []*discordgo.File {
+	if len(files) >= imagesPerReactionLimit {
+		files = files[:imagesPerReactionLimit]
+	}
+	return files
 }
 
 func (y *Yada) loadImagesInBackground() {
