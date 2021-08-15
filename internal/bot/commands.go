@@ -1,6 +1,9 @@
 package bot
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/bwmarrin/discordgo"
+	"log"
+)
 
 type Command struct {
 	AppCommand discordgo.ApplicationCommand
@@ -9,6 +12,17 @@ type Command struct {
 
 // Commands maps command names to Command instances.
 type Commands map[string]Command
+
+// CleanupCommands deletes all existing commands. Kinda overkill, but who cares. :)
+func (y *Yada) CleanupCommands() {
+	commands, err := y.Discord.ApplicationCommands(y.Config.AppID, y.Config.GuildID)
+	if err != nil {
+		log.Fatal("Cannot fetch commands.", err)
+	}
+	for _, c := range commands {
+		_ = y.Discord.ApplicationCommandDelete(y.Config.AppID, y.Config.GuildID, c.ID)
+	}
+}
 
 func (y *Yada) InitializeCommands() {
 	y.Commands = Commands{
@@ -27,5 +41,17 @@ func (y *Yada) InitializeCommands() {
 			},
 			Handler: y.ChoiceHandler,
 		},
+	}
+
+	for _, c := range y.Commands {
+		appCommand := &c.AppCommand
+		_, err := y.Discord.ApplicationCommandCreate(
+			y.Discord.State.User.ID,
+			y.Config.GuildID,
+			appCommand,
+		)
+		if err != nil {
+			log.Fatalf("Cannot create '%v' command: %v", appCommand.Name, err)
+		}
 	}
 }

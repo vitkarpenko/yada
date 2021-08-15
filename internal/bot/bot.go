@@ -70,19 +70,8 @@ func (y *Yada) setupIntents() {
 }
 
 func (y *Yada) setupCommands() {
+	y.CleanupCommands()
 	y.InitializeCommands()
-
-	for _, c := range y.Commands {
-		appCommand := &c.AppCommand
-		_, err := y.Discord.ApplicationCommandCreate(
-			y.Discord.State.User.ID,
-			y.Config.GuildID,
-			appCommand,
-		)
-		if err != nil {
-			log.Fatalf("Cannot create '%v' command: %v", appCommand.Name, err)
-		}
-	}
 }
 
 func (y *Yada) setupHandlers() {
