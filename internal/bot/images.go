@@ -12,9 +12,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-type Image struct {
-	ID   string
-	Body []byte
+type Body []byte
+
+type Images struct {
+	MessageID string
+	Bodies    []Body
 }
 
 const imagesPerReactionLimit = 5
@@ -26,7 +28,7 @@ func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageC
 	}
 
 	words := tokenize(m.Content)
-	files := getFilesToSend(words, y.Images)
+	files := getFilesToSend(words)
 
 	if len(files) != 0 {
 		files = limitFilesCount(files)
@@ -39,7 +41,7 @@ func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageC
 	}
 }
 
-func getFilesToSend(words []string, images map[string]Image) []*discordgo.File {
+func getFilesToSend(words []string) []*discordgo.File {
 	var files []*discordgo.File
 	seenWords := make(map[string]bool)
 	seenImages := make(map[string]bool)
@@ -84,6 +86,8 @@ func (y *Yada) processImages() {
 	var currentLastID string
 
 	for {
+		y.Images = make(map[string][]Images)
+
 		messages, err := y.Discord.ChannelMessages(
 			y.Config.ImagesChannelID,
 			loadMessagesLimit,
@@ -111,7 +115,7 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 		if len(attachments) == 0 {
 			continue
 		}
-		images := make([]Image, len(attachments))
+		images := make([]Images, len(attachments))
 		for _, a := range attachments {
 			images = append(images, readImageFromAttach(a))
 		}
@@ -120,25 +124,25 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 	}
 }
 
-func (y *Yada) setImagesTokens(triggerWords []string, images []Image) {
+func (y *Yada) setImagesTokens(triggerWords []string, images []Images) {
 	for _, w := range triggerWords {
 		for _, i := range images {
-			y.Images[w] = i
+			y.Images[w] = append(y.Images[w], i)
 		}
 	}
 }
 
-func readImageFromAttach(a *discordgo.MessageAttachment) Image {
+func readImageFromAttach(a *discordgo.MessageAttachment) Images {
 	response, err := http.Get(a.URL)
 	if err != nil {
-		return Image{}
+		return Images{}
 	}
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(response.Body)
 	imageBody, _ := io.ReadAll(response.Body)
-	return Image{
-		ID:   a.ID,
-		Body: imageBody,
+	return Images{
+		MessageID: a.ID,
+		Bodies:    imageBody,
 	}
 }
