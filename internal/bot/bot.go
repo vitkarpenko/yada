@@ -17,7 +17,7 @@ type Yada struct {
 	Discord   *discordgo.Session
 	DB        *gorm.DB
 	Balaboba  *balaboba.Balaboba
-	Images    map[string][]Images
+	Images    map[string]Images
 	Reminders []postgres.Reminder
 	Config    config.Config
 }
@@ -38,7 +38,7 @@ func NewYada(cfg config.Config) *Yada {
 	yada := &Yada{
 		Discord:  discordSession,
 		DB:       db,
-		Images:   map[string][]Image{},
+		Images:   map[string]Images{},
 		Config:   cfg,
 		Balaboba: balabobaService,
 	}

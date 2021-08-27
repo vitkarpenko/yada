@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -28,7 +29,7 @@ func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageC
 	}
 
 	words := tokenize(m.Content)
-	files := getFilesToSend(words)
+	files := y.getFilesToSend(words)
 
 	if len(files) != 0 {
 		files = limitFilesCount(files)
@@ -41,26 +42,33 @@ func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageC
 	}
 }
 
-func getFilesToSend(words []string) []*discordgo.File {
-	var files []*discordgo.File
+func (y *Yada) getFilesToSend(words []string) []*discordgo.File {
+	var (
+		images []Images
+		files  []*discordgo.File
+	)
 	seenWords := make(map[string]bool)
 	seenImages := make(map[string]bool)
 	for _, word := range words {
 		if seenWords[word] {
 			continue
 		}
-		if image, ok := images[word]; ok {
-			if seenImages[image.ID] {
+		if image, ok := y.Images[word]; ok {
+			if seenImages[image.MessageID] {
 				continue
 			}
-			files = append(files, &discordgo.File{
-				Name:        fmt.Sprintf("image_%s.gif", image.ID),
-				ContentType: "image/gif",
-				Reader:      bytes.NewReader(image.Body),
-			})
-			seenImages[image.ID] = true
+			images = append(images, image)
+			seenImages[image.MessageID] = true
 		}
 		seenWords[word] = true
+	}
+	for _, image := range images {
+		imageToShowIndex := rand.Intn(len(image.Bodies))
+		files = append(files, &discordgo.File{
+			Name:        fmt.Sprintf("image_%s.gif", image.MessageID),
+			ContentType: "image/gif",
+			Reader:      bytes.NewReader(image.Bodies[imageToShowIndex]),
+		})
 	}
 	return files
 }
@@ -86,7 +94,7 @@ func (y *Yada) processImages() {
 	var currentLastID string
 
 	for {
-		y.Images = make(map[string][]Images)
+		y.Images = make(map[string]Images)
 
 		messages, err := y.Discord.ChannelMessages(
 			y.Config.ImagesChannelID,
@@ -112,7 +120,7 @@ func (y *Yada) processImages() {
 func (y *Yada) downloadImages(messages []*discordgo.Message) {
 	for _, message := range messages {
 		attachments := message.Attachments
-		if len(attachments) == 0 {
+		if len(attachments) == 0 || len(message.Content) == 0 {
 			continue
 		}
 		images := make([]Images, len(attachments))
