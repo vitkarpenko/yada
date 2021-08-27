@@ -72,8 +72,8 @@ func (b *Balaboba) prepareRequest(marshalledBody []byte) *http.Request {
 
 func marshalBody(message string) ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"filter": rand.Intn(10),
-		"intro":  4,
+		"filter": 1,
+		"intro":  rand.Intn(10),
 		"query":  message,
 	})
 }
