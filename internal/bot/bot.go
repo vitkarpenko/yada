@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gorm.io/gorm"
 	"log"
+	"yada/internal/services/balaboba"
 	"yada/internal/storage/postgres"
 
 	"yada/internal/config"
@@ -15,6 +16,7 @@ type Yada struct {
 	Commands  Commands
 	Discord   *discordgo.Session
 	DB        *gorm.DB
+	Balaboba  *balaboba.Balaboba
 	Images    map[string]Image
 	Reminders []postgres.Reminder
 	Config    config.Config
@@ -31,11 +33,14 @@ func NewYada(cfg config.Config) *Yada {
 		log.Fatalln("Couldn't connect to database!", err)
 	}
 
+	balabobaService := balaboba.NewBalaboba()
+
 	yada := &Yada{
-		Discord: discordSession,
-		DB:      db,
-		Images:  map[string]Image{},
-		Config:  cfg,
+		Discord:  discordSession,
+		DB:       db,
+		Images:   map[string]Image{},
+		Config:   cfg,
+		Balaboba: balabobaService,
 	}
 
 	yada.setupIntents()
