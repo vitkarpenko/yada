@@ -123,34 +123,37 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 		if len(attachments) == 0 || len(message.Content) == 0 {
 			continue
 		}
-		images := make([]Images, len(attachments))
-		for _, a := range attachments {
-			images = append(images, readImageFromAttach(a))
+
+		bodies := make([]Body, len(attachments))
+		for i, a := range attachments {
+			bodies[i] = readImageBodyFromAttach(a)
 		}
+
 		triggerWords := strings.Split(message.Content, " ")
+		images := Images{
+			MessageID: message.ID,
+			Bodies:    bodies,
+		}
 		y.setImagesTokens(triggerWords, images)
 	}
 }
 
-func (y *Yada) setImagesTokens(triggerWords []string, images []Images) {
+func (y *Yada) setImagesTokens(triggerWords []string, images Images) {
 	for _, w := range triggerWords {
-		for _, i := range images {
-			y.Images[w] = append(y.Images[w], i)
-		}
+		y.Images[w] = images
 	}
 }
 
-func readImageFromAttach(a *discordgo.MessageAttachment) Images {
+func readImageBodyFromAttach(a *discordgo.MessageAttachment) []byte {
 	response, err := http.Get(a.URL)
 	if err != nil {
-		return Images{}
+		return nil
 	}
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(response.Body)
+
 	imageBody, _ := io.ReadAll(response.Body)
-	return Images{
-		MessageID: a.ID,
-		Bodies:    imageBody,
-	}
+
+	return imageBody
 }

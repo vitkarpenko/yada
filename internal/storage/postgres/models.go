@@ -11,3 +11,7 @@ type Reminder struct {
 	ChannelID string
 	RemindAt  time.Time
 }
+
+type LastQuote struct {
+	Hash string
+}

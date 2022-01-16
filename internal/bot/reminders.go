@@ -69,13 +69,7 @@ func (y *Yada) SetReminderHandler(s *discordgo.Session, m *discordgo.MessageCrea
 		return
 	}
 
-	_, _ = y.Discord.ChannelMessageSend(
-		m.ChannelID,
-		fmt.Sprintf(
-			"Дружище, конечно напомню, %s",
-			strings.ToLower(y.Balaboba.GenerateText("напомню")),
-		),
-	)
+	_, _ = y.Discord.ChannelMessageSend(m.ChannelID, "Записал, обязательно напомню.")
 
 	reminder := postgres.Reminder{
 		MessageID: m.MessageReference.MessageID,
@@ -115,11 +109,7 @@ func (y *Yada) remind(reminder postgres.Reminder) {
 	_, _ = y.Discord.ChannelMessageSendComplex(
 		reminder.ChannelID,
 		&discordgo.MessageSend{
-			Content: fmt.Sprintf(
-				"<@%s>, чувак, напоминаю, %s 🙂",
-				reminder.UserID,
-				strings.ToLower(y.Balaboba.GenerateText("напоминаю")),
-			),
+			Content: fmt.Sprintf("<@%s>, напоминаю. 🙂", reminder.UserID),
 			Reference: &discordgo.MessageReference{
 				MessageID: reminder.MessageID,
 				ChannelID: reminder.ChannelID,
