@@ -4,7 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gorm.io/gorm"
 	"log"
-	"yada/internal/services/balaboba"
+	"yada/internal/services/quotes"
 	"yada/internal/storage/postgres"
 
 	"yada/internal/config"
@@ -16,10 +16,10 @@ type Yada struct {
 	Commands  Commands
 	Discord   *discordgo.Session
 	DB        *gorm.DB
-	Balaboba  *balaboba.Balaboba
 	Images    map[string]Images
 	Reminders []postgres.Reminder
 	Config    config.Config
+	Quotes    *quotes.Service
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -33,14 +33,12 @@ func NewYada(cfg config.Config) *Yada {
 		log.Fatalln("Couldn't connect to database!", err)
 	}
 
-	balabobaService := balaboba.NewBalaboba()
-
 	yada := &Yada{
-		Discord:  discordSession,
-		DB:       db,
-		Images:   map[string]Images{},
-		Config:   cfg,
-		Balaboba: balabobaService,
+		Discord: discordSession,
+		DB:      db,
+		Images:  map[string]Images{},
+		Config:  cfg,
+		Quotes:  quotes.NewService(cfg.Goodreads),
 	}
 
 	yada.setupIntents()
@@ -57,15 +55,25 @@ func (y *Yada) Run() {
 		_ = Discord.Close()
 	}(y.Discord)
 
-	y.loadReminders()
-	y.checkRemindersInBackground()
-
-	y.loadImagesInBackground()
-
-	y.setupCommands()
-	y.setupHandlers()
+	y.initialize()
+	y.startBackgroundTasks()
+	y.setupInteractions()
 
 	waitUntilInterrupted()
+}
+
+func (y *Yada) setupInteractions() {
+	y.setupCommands()
+	y.setupHandlers()
+}
+
+func (y *Yada) startBackgroundTasks() {
+	y.checkRemindersInBackground()
+	y.loadImagesInBackground()
+}
+
+func (y *Yada) initialize() {
+	y.loadReminders()
 }
 
 func (y *Yada) setupIntents() {
