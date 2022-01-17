@@ -13,5 +13,6 @@ type Reminder struct {
 }
 
 type LastQuote struct {
+	ID   uint `gorm:"primarykey"`
 	Hash string
 }

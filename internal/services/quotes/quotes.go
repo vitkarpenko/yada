@@ -1,10 +1,14 @@
 package quotes
 
 import (
-	"github.com/PuerkitoBio/goquery"
+	"crypto/md5"
+	"fmt"
+	"github.com/bwmarrin/discordgo"
 	"log"
-	"net/http"
+	"strings"
+	"time"
 	"yada/internal/config"
+	"yada/internal/storage/postgres"
 )
 
 const (
@@ -12,74 +16,96 @@ const (
 	quotesListURL = "https://www.goodreads.com/quotes/list/49385044?sort=date_added"
 )
 
-type Service struct {
-	cfg    config.Goodreads
-	client goodreadsClient
-}
-
-func NewService(cfg config.Goodreads) *Service {
-	return &Service{cfg: cfg, client: newGoodreadsClient(cfg)}
-}
-
-type goodreadsClient struct {
-	*http.Client
-	sessionCookie string
-}
-
-func newGoodreadsClient(cfg config.Goodreads) goodreadsClient {
-	client := goodreadsClient{
-		Client:        http.DefaultClient,
-		sessionCookie: cfg.SessionCookie,
-	}
-	client.getQuotes()
-
-	return client
-}
-
 type Quote struct {
 	text, author, book string
+	hash               string
 }
 
-func (c goodreadsClient) getQuotes() []Quote {
-	req := c.prepareQuotesListRequest()
-
-	resp, err := c.Do(req)
-	if err != nil {
-		log.Println("Error while fetching quotes", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("Error while fetching quotes: status %d", resp.StatusCode)
-	}
-
-	html, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		log.Println("Error while parsing 'list quotes' response.")
-	}
-
-	authors := findAuthors(html)
-	books := findBooks(html)
-	quotes := findQuotes(html)
-	if authors.Length() != books.Length() || books.Length() != quotes.Length() {
-		log.Println("Got unmatched quotes, authors or book titles while fetching quotes.")
-		return nil
-	}
-
-	quotesCount := quotes.Length()
-	result := make([]Quote, quotesCount)
-	for i := 0; i < quotesCount; i++ {
-		quote := getQuote(quotes, authors, books, i)
-		result[i] = quote
-	}
-
-	return result
+type Service struct {
+	cfg     config.Quotes
+	discord *discordgo.Session
+	db      *postgres.DB
+	client  *goodreadsClient
 }
 
-func (c goodreadsClient) prepareQuotesListRequest() *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, quotesListURL, nil)
+func NewService(cfg config.Quotes, discord *discordgo.Session, db *postgres.DB) *Service {
+	return &Service{cfg: cfg, discord: discord, db: db, client: newGoodreadsClient()}
+}
 
-	q := req.URL.Query()
-	q.Add("sort", "date_added")
-	req.URL.RawQuery = q.Encode()
+func (s *Service) CheckQuotesInBackground() {
+	ticker := time.NewTicker(10 * time.Second)
+	go func() {
+		for range ticker.C {
+			s.checkQuotes()
+		}
+	}()
+}
 
-	return req
+func (s *Service) checkQuotes() {
+	quotes := s.getNewQuotes()
+	// Post old quotes first.
+	quotes = reverseQuotes(quotes)
+
+	for _, q := range quotes {
+		for {
+			err := s.postQuote(q)
+			if err != nil {
+				log.Println("Error while sending quote to discord", err)
+				return
+			} else {
+				break
+			}
+		}
+	}
+}
+
+func (s *Service) getNewQuotes() (result []Quote) {
+	lastQuoteHash := s.db.GetLastQuoteHash()
+	quotes := s.client.getQuotes()
+
+	if lastQuoteHash == "" && len(quotes) >= 1 {
+		s.db.SetLastQuoteHash(quotes[0].hash)
+		return quotes
+	}
+
+	for _, q := range quotes {
+		if q.hash == lastQuoteHash {
+			break
+		}
+		result = append(result, q)
+	}
+
+	if len(result) >= 1 {
+		s.db.UpdateLastQuoteHash(result[0].hash)
+	}
+
+	return
+}
+
+func (s *Service) postQuote(q Quote) error {
+	message := formatQuoteMessage(q)
+	_, err := s.discord.ChannelMessageSend(s.cfg.QuotesChannelID, message)
+	return err
+}
+
+func formatQuoteMessage(q Quote) string {
+	message := strings.Join(
+		[]string{
+			fmt.Sprintf("> %s", q.text),
+			fmt.Sprintf("*— %s, %s*", q.author, q.book),
+		},
+		"\n",
+	)
+	return message
+}
+
+func md5Hash(str string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(str)))
+}
+
+func reverseQuotes(quotes []Quote) []Quote {
+	for i, j := 0, len(quotes)-1; i < j; i, j = i+1, j-1 {
+		quotes[i], quotes[j] = quotes[j], quotes[i]
+	}
+	return quotes
 }

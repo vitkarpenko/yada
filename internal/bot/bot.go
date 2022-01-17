@@ -2,7 +2,6 @@ package bot
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
 	"log"
 	"yada/internal/services/quotes"
 	"yada/internal/storage/postgres"
@@ -15,7 +14,7 @@ const loadMessagesLimit = 100
 type Yada struct {
 	Commands  Commands
 	Discord   *discordgo.Session
-	DB        *gorm.DB
+	DB        *postgres.DB
 	Images    map[string]Images
 	Reminders []postgres.Reminder
 	Config    config.Config
@@ -38,7 +37,7 @@ func NewYada(cfg config.Config) *Yada {
 		DB:      db,
 		Images:  map[string]Images{},
 		Config:  cfg,
-		Quotes:  quotes.NewService(cfg.Goodreads),
+		Quotes:  quotes.NewService(cfg.Quotes, discordSession, db),
 	}
 
 	yada.setupIntents()
@@ -70,6 +69,7 @@ func (y *Yada) setupInteractions() {
 func (y *Yada) startBackgroundTasks() {
 	y.checkRemindersInBackground()
 	y.loadImagesInBackground()
+	y.Quotes.CheckQuotesInBackground()
 }
 
 func (y *Yada) initialize() {
