@@ -140,7 +140,7 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 
 func (y *Yada) setImagesTokens(triggerWords []string, images Images) {
 	for _, w := range triggerWords {
-		y.Images[w] = images
+		y.Images[strings.ToLower(w)] = images
 	}
 }
 
