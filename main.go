@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/kelseyhightower/envconfig"
 	"log"
 	"math/rand"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/joho/godotenv"
 
 	"yada/internal/bot"

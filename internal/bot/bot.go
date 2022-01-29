@@ -1,12 +1,13 @@
 package bot
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"log"
-	"yada/internal/services/quotes"
-	"yada/internal/storage/postgres"
+
+	"github.com/bwmarrin/discordgo"
 
 	"yada/internal/config"
+	"yada/internal/services/quotes"
+	"yada/internal/storage/postgres"
 )
 
 const loadMessagesLimit = 100

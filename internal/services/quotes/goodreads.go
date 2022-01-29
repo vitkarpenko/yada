@@ -1,9 +1,10 @@
 package quotes
 
 import (
-	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type goodreadsClient struct {

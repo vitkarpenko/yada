@@ -1,8 +1,9 @@
 package bot
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"log"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 type Command struct {
