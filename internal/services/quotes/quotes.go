@@ -3,10 +3,12 @@ package quotes
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+
 	"yada/internal/config"
 	"yada/internal/storage/postgres"
 )

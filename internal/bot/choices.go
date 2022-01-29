@@ -2,9 +2,10 @@ package bot
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"math/rand"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 func (y *Yada) ChoiceHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
