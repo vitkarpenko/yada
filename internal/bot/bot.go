@@ -6,20 +6,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"yada/internal/config"
-	"yada/internal/services/quotes"
-	"yada/internal/storage/postgres"
 )
 
 const loadMessagesLimit = 100
 
 type Yada struct {
-	Commands  Commands
-	Discord   *discordgo.Session
-	DB        *postgres.DB
-	Images    map[string]Images
-	Reminders []postgres.Reminder
-	Config    config.Config
-	Quotes    *quotes.Service
+	Commands Commands
+	Discord  *discordgo.Session
+	Images   map[string]Images
+	Config   config.Config
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -28,17 +23,10 @@ func NewYada(cfg config.Config) *Yada {
 		log.Fatalln("Couldn't create discord session!", err)
 	}
 
-	db, err := postgres.NewDB(cfg)
-	if err != nil {
-		log.Fatalln("Couldn't connect to database!", err)
-	}
-
 	yada := &Yada{
 		Discord: discordSession,
-		DB:      db,
 		Images:  map[string]Images{},
 		Config:  cfg,
-		Quotes:  quotes.NewService(cfg.Quotes, discordSession, db),
 	}
 
 	yada.setupIntents()
@@ -55,7 +43,6 @@ func (y *Yada) Run() {
 		_ = Discord.Close()
 	}(y.Discord)
 
-	y.initialize()
 	y.startBackgroundTasks()
 	y.setupInteractions()
 
@@ -68,13 +55,7 @@ func (y *Yada) setupInteractions() {
 }
 
 func (y *Yada) startBackgroundTasks() {
-	y.checkRemindersInBackground()
 	y.loadImagesInBackground()
-	y.Quotes.CheckQuotesInBackground()
-}
-
-func (y *Yada) initialize() {
-	y.loadReminders()
 }
 
 func (y *Yada) setupIntents() {
@@ -96,5 +77,4 @@ func (y *Yada) setupHandlers() {
 
 	// Add other handlers.
 	y.Discord.AddHandler(y.ReactWithImageHandler)
-	y.Discord.AddHandler(y.SetReminderHandler)
 }
