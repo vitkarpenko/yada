@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/uuid"
 )
 
 type Body []byte
@@ -20,7 +21,11 @@ type Images struct {
 	Bodies    []Body
 }
 
-const imagesPerReactionLimit = 5
+const (
+	imagesPerReactionLimit = 5
+	randomImageChance      = 0.005
+	wrongImageChance       = 0.1
+)
 
 func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself.
@@ -29,7 +34,15 @@ func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageC
 	}
 
 	words := tokenize(m.Content)
-	files := y.getFilesToSend(words)
+
+	var files []*discordgo.File
+	if checkChance(randomImageChance) {
+		files = []*discordgo.File{
+			discordFileFromImage(y.randomImage(), uuid.New().String()),
+		}
+	} else {
+		files = y.getFilesToSend(words)
+	}
 
 	if len(files) != 0 {
 		files = limitFilesCount(files)
@@ -63,12 +76,15 @@ func (y *Yada) getFilesToSend(words []string) []*discordgo.File {
 		seenWords[word] = true
 	}
 	for _, image := range images {
-		imageToShowIndex := rand.Intn(len(image.Bodies))
-		files = append(files, &discordgo.File{
-			Name:        fmt.Sprintf("image_%s.gif", image.MessageID),
-			ContentType: "image/gif",
-			Reader:      bytes.NewReader(image.Bodies[imageToShowIndex]),
-		})
+		if checkChance(wrongImageChance) {
+			files = append(files,
+				discordFileFromImage(y.randomImage(), uuid.New().String()),
+			)
+		} else {
+			imageToShowIndex := rand.Intn(len(image.Bodies))
+			imageToShow := image.Bodies[imageToShowIndex]
+			files = append(files, discordFileFromImage(imageToShow, image.MessageID))
+		}
 	}
 	return files
 }
@@ -140,8 +156,15 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 
 func (y *Yada) setImagesTokens(triggerWords []string, images Images) {
 	for _, w := range triggerWords {
-		y.Images[strings.ToLower(w)] = images
+		mergedBodies := append(y.Images[strings.ToLower(w)].Bodies, images.Bodies...)
+		y.setBodies(w, mergedBodies)
 	}
+}
+
+func (y *Yada) setBodies(w string, mergedBodies []Body) {
+	imagesEntry := y.Images[strings.ToLower(w)]
+	imagesEntry.Bodies = mergedBodies
+	y.Images[strings.ToLower(w)] = imagesEntry
 }
 
 func readImageBodyFromAttach(a *discordgo.MessageAttachment) []byte {
@@ -156,4 +179,25 @@ func readImageBodyFromAttach(a *discordgo.MessageAttachment) []byte {
 	imageBody, _ := io.ReadAll(response.Body)
 
 	return imageBody
+}
+
+func checkChance(chance float64) bool {
+	return rand.Float64() < chance
+}
+
+func (y *Yada) randomImage() Body {
+	bodies := make([]Body, 0)
+	for _, image := range y.Images {
+		bodies = append(bodies, image.Bodies...)
+	}
+
+	return bodies[rand.Intn(len(bodies))]
+}
+
+func discordFileFromImage(image Body, imageID string) *discordgo.File {
+	return &discordgo.File{
+		Name:        fmt.Sprintf("image_%s.gif", imageID),
+		ContentType: "image/gif",
+		Reader:      bytes.NewReader(image),
+	}
 }
