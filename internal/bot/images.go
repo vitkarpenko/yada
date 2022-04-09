@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -21,10 +22,18 @@ type Images struct {
 	Bodies    []Body
 }
 
+type ImageDownloadResult struct {
+	images       Images
+	triggerWords []string
+}
+
 const (
 	imagesPerReactionLimit = 5
-	randomImageChance      = 0.005
-	wrongImageChance       = 0.1
+
+	randomImageChance = 0.005
+	wrongImageChance  = 0.1
+
+	downloadWorkersCount = 50
 )
 
 func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -134,10 +143,37 @@ func (y *Yada) processImages() {
 }
 
 func (y *Yada) downloadImages(messages []*discordgo.Message) {
-	for _, message := range messages {
-		attachments := message.Attachments
-		if len(attachments) == 0 || len(message.Content) == 0 {
-			continue
+	var wg sync.WaitGroup
+
+	jobs := make(chan discordgo.Message, len(messages))
+	for _, m := range messages {
+		wg.Add(1)
+		jobs <- *m
+	}
+	close(jobs)
+
+	results := make(chan ImageDownloadResult, len(messages))
+	for w := 1; w <= downloadWorkersCount; w++ {
+		go y.downloader(jobs, results, &wg)
+	}
+
+	wg.Wait()
+	close(results)
+
+	for r := range results {
+		y.setImagesTokens(r.triggerWords, r.images)
+	}
+}
+
+func (y *Yada) downloader(
+	jobs chan discordgo.Message,
+	results chan ImageDownloadResult,
+	wg *sync.WaitGroup,
+) {
+	for j := range jobs {
+		attachments := j.Attachments
+		if len(attachments) == 0 || len(j.Content) == 0 {
+			return
 		}
 
 		bodies := make([]Body, len(attachments))
@@ -145,12 +181,14 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 			bodies[i] = readImageBodyFromAttach(a)
 		}
 
-		triggerWords := strings.Split(message.Content, " ")
-		images := Images{
-			MessageID: message.ID,
-			Bodies:    bodies,
+		results <- ImageDownloadResult{
+			images: Images{
+				MessageID: j.ID,
+				Bodies:    bodies,
+			},
+			triggerWords: strings.Split(j.Content, " "),
 		}
-		y.setImagesTokens(triggerWords, images)
+		wg.Done()
 	}
 }
 
