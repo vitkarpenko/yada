@@ -2,19 +2,15 @@ package main
 
 import (
 	"log"
-	"math/rand"
-	"time"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
 
 	"yada/internal/bot"
 	"yada/internal/config"
 )
 
 func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Println(".env not found")
