@@ -219,10 +219,6 @@ func readImageBodyFromAttach(a *discordgo.MessageAttachment) []byte {
 	return imageBody
 }
 
-func checkChance(chance float64) bool {
-	return rand.Float64() < chance
-}
-
 func (y *Yada) randomImage() Body {
 	bodies := make([]Body, 0)
 	for _, image := range y.Images {

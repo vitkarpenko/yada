@@ -77,4 +77,5 @@ func (y *Yada) setupHandlers() {
 
 	// Add other handlers.
 	y.Discord.AddHandler(y.ReactWithImageHandler)
+	y.Discord.AddHandler(y.RandomEmojiHandler)
 }
