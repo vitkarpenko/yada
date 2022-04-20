@@ -15,6 +15,7 @@ type Yada struct {
 	Discord  *discordgo.Session
 	Images   map[string]Images
 	Config   config.Config
+	Emojis   []*discordgo.Emoji
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -30,6 +31,7 @@ func NewYada(cfg config.Config) *Yada {
 	}
 
 	yada.setupIntents()
+	yada.getEmojis()
 
 	return yada
 }
@@ -49,6 +51,19 @@ func (y *Yada) Run() {
 	waitUntilInterrupted()
 }
 
+func (y *Yada) setupIntents() {
+	y.Discord.Identify.Intents = discordgo.IntentsGuildMessages
+}
+
+func (y *Yada) getEmojis() {
+	emojis, err := y.Discord.GuildEmojis(y.Config.GuildID)
+	if err != nil {
+		log.Fatal("Couldn't get emojis!")
+	}
+
+	y.Emojis = emojis
+}
+
 func (y *Yada) setupInteractions() {
 	y.setupCommands()
 	y.setupHandlers()
@@ -56,10 +71,6 @@ func (y *Yada) setupInteractions() {
 
 func (y *Yada) startBackgroundTasks() {
 	y.loadImagesInBackground()
-}
-
-func (y *Yada) setupIntents() {
-	y.Discord.Identify.Intents = discordgo.IntentsGuildMessages
 }
 
 func (y *Yada) setupCommands() {
