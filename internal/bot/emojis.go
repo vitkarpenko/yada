@@ -1,24 +1,13 @@
 package bot
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-const randomEmojiChance = 0.05
-
-var randomEmojis = []string{
-	"<:peka:710107629761855619>",
-	"<:uuu:884497957108457532>",
-	"<:epeka:912368988615495710>",
-	"<:smlpeka:882817339614199889>",
-	"<:yao:882718429667295304>",
-	"<:tears:405771172903649280>",
-	"<:thinking2:882730590590361672>",
-	"<:gusta:882722295783780383>",
-	"<:why:882720049658470400>",
-}
+const randomEmojiChance = 0.04
 
 func (y *Yada) RandomEmojiHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself.
@@ -30,7 +19,7 @@ func (y *Yada) RandomEmojiHandler(s *discordgo.Session, m *discordgo.MessageCrea
 		_, _ = y.Discord.ChannelMessageSendComplex(
 			m.ChannelID,
 			&discordgo.MessageSend{
-				Content: getRandomEmoji(),
+				Content: y.getRandomEmoji(),
 				Reference: &discordgo.MessageReference{
 					MessageID: m.Message.ID,
 					ChannelID: m.ChannelID,
@@ -41,6 +30,7 @@ func (y *Yada) RandomEmojiHandler(s *discordgo.Session, m *discordgo.MessageCrea
 	}
 }
 
-func getRandomEmoji() string {
-	return randomEmojis[rand.Intn(len(randomEmojis))]
+func (y *Yada) getRandomEmoji() string {
+	emoji := y.Emojis[rand.Intn(len(y.Emojis))]
+	return fmt.Sprintf("<:%s:%s>", emoji.Name, emoji.ID)
 }
