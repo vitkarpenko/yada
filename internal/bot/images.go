@@ -147,13 +147,13 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 
 	jobs := make(chan discordgo.Message, len(messages))
 	for _, m := range messages {
-		wg.Add(1)
 		jobs <- *m
 	}
 	close(jobs)
 
 	results := make(chan ImageDownloadResult, len(messages))
 	for w := 1; w <= downloadWorkersCount; w++ {
+		wg.Add(1)
 		go y.downloader(jobs, results, &wg)
 	}
 
@@ -188,8 +188,8 @@ func (y *Yada) downloader(
 			},
 			triggerWords: strings.Split(j.Content, " "),
 		}
-		wg.Done()
 	}
+	wg.Done()
 }
 
 func (y *Yada) setImagesTokens(triggerWords []string, images Images) {
