@@ -7,7 +7,7 @@ run: build
 	docker run --restart=always --name=yada -d yada:$(COMMIT)
 
 stop:
-	docker kill yada
+	docker kill yada && docker rm yada
 
 pull:
 	git pull
