@@ -1,4 +1,4 @@
-module yada
+module github.com/vitkarpenko/yada
 
 // +heroku goVersion go1.17
 go 1.18
