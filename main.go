@@ -6,8 +6,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 
-	"yada/internal/bot"
-	"yada/internal/config"
+	"github.com/vitkarpenko/yada/internal/bot"
+	"github.com/vitkarpenko/yada/internal/config"
 )
 
 func main() {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"yada/internal/config"
+	"github.com/vitkarpenko/yada/internal/config"
 )
 
 const loadMessagesLimit = 100
