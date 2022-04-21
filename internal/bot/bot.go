@@ -56,12 +56,19 @@ func (y *Yada) setupIntents() {
 }
 
 func (y *Yada) getEmojis() {
-	emojis, err := y.Discord.GuildEmojis(y.Config.GuildID)
+	guildEmojis, err := y.Discord.GuildEmojis(y.Config.GuildID)
 	if err != nil {
 		log.Fatal("Couldn't get emojis!")
 	}
 
-	y.Emojis = emojis
+	var availableEmojis []*discordgo.Emoji
+	for _, e := range guildEmojis {
+		if e.Available {
+			availableEmojis = append(availableEmojis, e)
+		}
+	}
+
+	y.Emojis = availableEmojis
 }
 
 func (y *Yada) setupInteractions() {
