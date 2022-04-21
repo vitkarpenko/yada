@@ -4,10 +4,10 @@ build:
 	docker build -t yada:$(COMMIT) .
 
 run: build
-	docker run --restart=always -d yada:$(COMMIT)
+	docker run --restart=always --name=yada -d yada:$(COMMIT)
 
 stop:
-	docker kill yada:$(COMMIT)
+	docker kill yada
 
 pull:
 	git pull
