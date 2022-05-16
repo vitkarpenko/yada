@@ -69,7 +69,7 @@ func (y *Yada) ChoiceHandler(s *discordgo.Session, i *discordgo.InteractionCreat
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: fmt.Sprintf(
-				"Выбирал из списка `%s` и выбрал: **%s**.",
+				"Выбирала из списка `%s` и выбрала: **%s**.",
 				message,
 				strings.TrimSpace(words[randIndex]),
 			),
