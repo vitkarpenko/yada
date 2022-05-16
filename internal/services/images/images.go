@@ -1,4 +1,4 @@
-package bot
+package images
 
 import (
 	"bytes"
@@ -13,7 +13,26 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+
+	"github.com/vitkarpenko/yada/internal/utils"
 )
+
+const loadMessagesLimit = 100
+
+type Service struct {
+	images          map[string]Images
+	discord         *discordgo.Session
+	imagesChannelID string
+}
+
+func New(discord *discordgo.Session, imagesChannelID string) *Service {
+	service := &Service{
+		discord:         discord,
+		imagesChannelID: imagesChannelID,
+	}
+	service.loadInBackground()
+	return service
+}
 
 type Body []byte
 
@@ -29,42 +48,11 @@ type ImageDownloadResult struct {
 
 const (
 	imagesPerReactionLimit = 5
-
-	randomImageChance = 0.005
-	wrongImageChance  = 0.1
-
-	downloadWorkersCount = 50
+	wrongImageChance       = 0.1
+	downloadWorkersCount   = 50
 )
 
-func (y *Yada) ReactWithImageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// Ignore all messages created by the bot itself.
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	words := tokenize(m.Content)
-
-	var files []*discordgo.File
-	if checkChance(randomImageChance) {
-		files = []*discordgo.File{
-			discordFileFromImage(y.randomImage(), uuid.New().String()),
-		}
-	} else {
-		files = y.getFilesToSend(words)
-	}
-
-	if len(files) != 0 {
-		files = limitFilesCount(files)
-		_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Files: files,
-		})
-		if err != nil {
-			log.Println("Couldn't send an image.", err)
-		}
-	}
-}
-
-func (y *Yada) getFilesToSend(words []string) []*discordgo.File {
+func (s *Service) GetFilesToSend(words []string) []*discordgo.File {
 	var (
 		images []Images
 		files  []*discordgo.File
@@ -75,7 +63,7 @@ func (y *Yada) getFilesToSend(words []string) []*discordgo.File {
 		if seenWords[word] {
 			continue
 		}
-		if image, ok := y.Images[word]; ok {
+		if image, ok := s.images[word]; ok {
 			if seenImages[image.MessageID] {
 				continue
 			}
@@ -85,16 +73,21 @@ func (y *Yada) getFilesToSend(words []string) []*discordgo.File {
 		seenWords[word] = true
 	}
 	for _, image := range images {
-		if checkChance(wrongImageChance) {
+		if utils.CheckChance(wrongImageChance) {
 			files = append(files,
-				discordFileFromImage(y.randomImage(), uuid.New().String()),
+				DiscordFileFromImage(s.Random(), uuid.New().String()),
 			)
 		} else {
 			imageToShowIndex := rand.Intn(len(image.Bodies))
 			imageToShow := image.Bodies[imageToShowIndex]
-			files = append(files, discordFileFromImage(imageToShow, image.MessageID))
+			files = append(files, DiscordFileFromImage(imageToShow, image.MessageID))
 		}
 	}
+
+	if len(files) != 0 {
+		files = limitFilesCount(files)
+	}
+
 	return files
 }
 
@@ -105,24 +98,24 @@ func limitFilesCount(files []*discordgo.File) []*discordgo.File {
 	return files
 }
 
-func (y *Yada) loadImagesInBackground() {
-	y.processImages()
+func (s *Service) loadInBackground() {
+	s.process()
 	ticker := time.NewTicker(20 * time.Second)
 	go func() {
 		for range ticker.C {
-			y.processImages()
+			s.process()
 		}
 	}()
 }
 
-func (y *Yada) processImages() {
+func (s *Service) process() {
 	var currentLastID string
 
 	for {
-		y.Images = make(map[string]Images)
+		s.images = make(map[string]Images)
 
-		messages, err := y.Discord.ChannelMessages(
-			y.Config.ImagesChannelID,
+		messages, err := s.discord.ChannelMessages(
+			s.imagesChannelID,
 			loadMessagesLimit,
 			"",
 			currentLastID,
@@ -132,7 +125,7 @@ func (y *Yada) processImages() {
 			log.Fatalln("Could not load images from image channel!", err)
 		}
 
-		y.downloadImages(messages)
+		s.download(messages)
 
 		if len(messages) < loadMessagesLimit {
 			break
@@ -142,7 +135,7 @@ func (y *Yada) processImages() {
 	}
 }
 
-func (y *Yada) downloadImages(messages []*discordgo.Message) {
+func (s *Service) download(messages []*discordgo.Message) {
 	var wg sync.WaitGroup
 
 	jobs := make(chan discordgo.Message, len(messages))
@@ -154,18 +147,18 @@ func (y *Yada) downloadImages(messages []*discordgo.Message) {
 	results := make(chan ImageDownloadResult, len(messages))
 	for w := 1; w <= downloadWorkersCount; w++ {
 		wg.Add(1)
-		go y.downloader(jobs, results, &wg)
+		go s.downloader(jobs, results, &wg)
 	}
 
 	wg.Wait()
 	close(results)
 
 	for r := range results {
-		y.setImagesTokens(r.triggerWords, r.images)
+		s.setTokens(r.triggerWords, r.images)
 	}
 }
 
-func (y *Yada) downloader(
+func (s *Service) downloader(
 	jobs chan discordgo.Message,
 	results chan ImageDownloadResult,
 	wg *sync.WaitGroup,
@@ -192,17 +185,17 @@ func (y *Yada) downloader(
 	wg.Done()
 }
 
-func (y *Yada) setImagesTokens(triggerWords []string, images Images) {
+func (s *Service) setTokens(triggerWords []string, images Images) {
 	for _, w := range triggerWords {
-		mergedBodies := append(y.Images[strings.ToLower(w)].Bodies, images.Bodies...)
-		y.setBodies(w, mergedBodies)
+		mergedBodies := append(s.images[strings.ToLower(w)].Bodies, images.Bodies...)
+		s.setBodies(w, mergedBodies)
 	}
 }
 
-func (y *Yada) setBodies(w string, mergedBodies []Body) {
-	imagesEntry := y.Images[strings.ToLower(w)]
+func (s *Service) setBodies(w string, mergedBodies []Body) {
+	imagesEntry := s.images[strings.ToLower(w)]
 	imagesEntry.Bodies = mergedBodies
-	y.Images[strings.ToLower(w)] = imagesEntry
+	s.images[strings.ToLower(w)] = imagesEntry
 }
 
 func readImageBodyFromAttach(a *discordgo.MessageAttachment) []byte {
@@ -219,16 +212,16 @@ func readImageBodyFromAttach(a *discordgo.MessageAttachment) []byte {
 	return imageBody
 }
 
-func (y *Yada) randomImage() Body {
+func (s *Service) Random() Body {
 	bodies := make([]Body, 0)
-	for _, image := range y.Images {
+	for _, image := range s.images {
 		bodies = append(bodies, image.Bodies...)
 	}
 
 	return bodies[rand.Intn(len(bodies))]
 }
 
-func discordFileFromImage(image Body, imageID string) *discordgo.File {
+func DiscordFileFromImage(image Body, imageID string) *discordgo.File {
 	return &discordgo.File{
 		Name:        fmt.Sprintf("image_%s.gif", imageID),
 		ContentType: "image/gif",

@@ -6,16 +6,18 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/vitkarpenko/yada/internal/config"
+	"github.com/vitkarpenko/yada/internal/services/emojis"
+	"github.com/vitkarpenko/yada/internal/services/images"
+	"github.com/vitkarpenko/yada/internal/utils"
 )
-
-const loadMessagesLimit = 100
 
 type Yada struct {
 	Commands Commands
 	Discord  *discordgo.Session
-	Images   map[string]Images
 	Config   config.Config
-	Emojis   []*discordgo.Emoji
+
+	Images *images.Service
+	Emojis *emojis.Service
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -26,12 +28,12 @@ func NewYada(cfg config.Config) *Yada {
 
 	yada := &Yada{
 		Discord: discordSession,
-		Images:  map[string]Images{},
 		Config:  cfg,
+		Images:  images.New(discordSession, cfg.ImagesChannelID),
+		Emojis:  emojis.New(discordSession, cfg.GuildID),
 	}
 
 	yada.setupIntents()
-	yada.getEmojis()
 
 	return yada
 }
@@ -45,41 +47,19 @@ func (y *Yada) Run() {
 		_ = Discord.Close()
 	}(y.Discord)
 
-	y.startBackgroundTasks()
 	y.setupInteractions()
 
-	waitUntilInterrupted()
+	utils.WaitUntilInterrupted()
 }
 
 func (y *Yada) setupIntents() {
 	y.Discord.Identify.Intents = discordgo.IntentsGuildMessages
 }
 
-func (y *Yada) getEmojis() {
-	guildEmojis, err := y.Discord.GuildEmojis(y.Config.GuildID)
-	if err != nil {
-		log.Fatal("Couldn't get emojis!")
-	}
-
-	var availableEmojis []*discordgo.Emoji
-	for _, e := range guildEmojis {
-		if e.Available {
-			availableEmojis = append(availableEmojis, e)
-		}
-	}
-
-	y.Emojis = availableEmojis
-}
-
 func (y *Yada) setupInteractions() {
 	y.setupCommands()
 	y.setupHandlers()
 }
-
-func (y *Yada) startBackgroundTasks() {
-	y.loadImagesInBackground()
-}
-
 func (y *Yada) setupCommands() {
 	y.CleanupCommands()
 	y.InitializeCommands()

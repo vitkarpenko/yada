@@ -1,4 +1,4 @@
-package bot
+package tokens
 
 import (
 	"regexp"
@@ -7,8 +7,8 @@ import (
 
 var anySeparatorRegexp = regexp.MustCompile(`[^а-яА-ЯёЁ\w\d]+`)
 
-// tokenize splits input by any non-alphabetic/non-numeric characters and lowercases tokens.
-func tokenize(message string) []string {
+// Tokenize splits input by any non-alphabetic/non-numeric characters and lowercases tokens.
+func Tokenize(message string) []string {
 	splitted := anySeparatorRegexp.Split(message, -1)
 	result := tokensToLowerCase(splitted)
 	return result
