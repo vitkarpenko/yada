@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	randomImageChance = 0.005
-	randomEmojiChance = 0.025
+	randomImageChance = 0.01
+	randomEmojiChance = 0.02
 )
 
 func (y *Yada) ReactWithImageHandler(ds *discordgo.Session, m *discordgo.MessageCreate) {
