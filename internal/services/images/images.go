@@ -17,7 +17,12 @@ import (
 	"github.com/vitkarpenko/yada/internal/utils"
 )
 
-const loadMessagesLimit = 100
+const (
+	downloadWorkersCount   = 50
+	imagesPerReactionLimit = 5
+	loadMessagesLimit      = 100
+	wrongImageChance       = 0.02
+)
 
 type Service struct {
 	images          map[string]Images
@@ -45,12 +50,6 @@ type ImageDownloadResult struct {
 	images       Images
 	triggerWords []string
 }
-
-const (
-	imagesPerReactionLimit = 5
-	wrongImageChance       = 0.1
-	downloadWorkersCount   = 50
-)
 
 func (s *Service) GetFilesToSend(words []string) []*discordgo.File {
 	var (
