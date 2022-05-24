@@ -15,10 +15,12 @@ type Service struct {
 }
 
 func New(discord *discordgo.Session, guildID string) *Service {
-	return &Service{
+	service := &Service{
 		discord: discord,
 		guildID: guildID,
 	}
+	service.getEmojis()
+	return service
 }
 
 func (s *Service) Random() string {
