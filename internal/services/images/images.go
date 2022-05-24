@@ -24,6 +24,7 @@ const (
 	loadMessagesLimit         = 100
 	wrongImageChance          = 0.02
 	minWordLenToCheckSpelling = 4
+	redownloadTimeout         = 2 * time.Minute
 )
 
 type Service struct {
@@ -101,7 +102,7 @@ func limitFilesCount(files []*discordgo.File) []*discordgo.File {
 
 func (s *Service) loadInBackground() {
 	s.processMessages()
-	ticker := time.NewTicker(20 * time.Second)
+	ticker := time.NewTicker(redownloadTimeout)
 	go func() {
 		for range ticker.C {
 			s.processMessages()
