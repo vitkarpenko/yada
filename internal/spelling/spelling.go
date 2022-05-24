@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-const letters = "abcdefghijklmnopqrstuvwxyz"
+const letters = "abcdefghijklmnopqrstuvwxyzабвгдеёжзиклмнопрстуфхцчшщъыьэюя"
 
 type split struct {
 	left, right string
