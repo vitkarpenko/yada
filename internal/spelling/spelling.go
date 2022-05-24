@@ -1,6 +1,7 @@
 package spelling
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -14,7 +15,10 @@ func SimpleEdits(word string) (result []string) {
 	splits := splitWord(word)
 
 	editFuncs := []func(splits []split, wg *sync.WaitGroup, edits chan<- string){
-		deletes, transposes, replaces, inserts,
+		deletes,
+		transposes,
+		replaces,
+		inserts,
 	}
 
 	wg := &sync.WaitGroup{}
@@ -37,18 +41,21 @@ func deletes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 		if len(s.right) == 0 {
 			continue
 		}
-		edits <- string(append(s.left, s.right[1:]...))
+		edit := newEdit(s)
+		edits <- string(append(edit, s.right[1:]...))
 	}
 
 	wg.Done()
 }
+
 
 func transposes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 	for _, s := range splits {
 		if len(s.right) < 2 {
 			continue
 		}
-		edits <- string(append(s.left, swapFirstChars(s.right)...))
+		edit := newEdit(s)
+		edits <- string(append(edit, swapFirstChars(s.right)...))
 	}
 
 	wg.Done()
@@ -60,7 +67,8 @@ func replaces(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 			continue
 		}
 		for _, l := range letters {
-			edit := append(s.left, l)
+			edit := newEdit(s)
+			edit = append(edit, l)
 			edit = append(edit, s.right[1:]...)
 			edits <- string(edit)
 		}
@@ -72,7 +80,8 @@ func replaces(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 func inserts(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 	for _, s := range splits {
 		for _, l := range letters {
-			edit := append(s.left, l)
+			edit := newEdit(s)
+			edit = append(edit, l)
 			edit = append(edit, s.right...)
 			edits <- string(edit)
 		}
@@ -96,8 +105,10 @@ func splitWord(word string) []split {
 }
 
 func swapFirstChars(runes []rune) []rune {
-	runes[1], runes[0] = runes[0], runes[1]
-	return runes
+	result := make([]rune, len(runes))
+	copy(result, runes)
+	result[1], result[0] = result[0], result[1]
+	return result
 }
 
 func chanToSlice[T any](c chan T) (result []T) {
@@ -105,4 +116,11 @@ func chanToSlice[T any](c chan T) (result []T) {
 		result = append(result, entry)
 	}
 	return
+}
+
+
+func newEdit(s split) []rune {
+	edit := make([]rune, len(s.left))
+	copy(edit, s.left)
+	return edit
 }
