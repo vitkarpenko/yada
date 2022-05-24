@@ -1,7 +1,6 @@
 package spelling
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -47,7 +46,6 @@ func deletes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 
 	wg.Done()
 }
-
 
 func transposes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 	for _, s := range splits {
@@ -117,7 +115,6 @@ func chanToSlice[T any](c chan T) (result []T) {
 	}
 	return
 }
-
 
 func newEdit(s split) []rune {
 	edit := make([]rune, len(s.left))
