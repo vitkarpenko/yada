@@ -150,7 +150,7 @@ func Test_replaces(t *testing.T) {
 					{left: "word", right: ""},
 				},
 			},
-			wantResultLen: len("word") * len(letters),
+			wantResultLen: len("word") * len([]rune(letters)),
 		},
 	}
 	for _, tt := range tests {
@@ -190,7 +190,7 @@ func Test_inserts(t *testing.T) {
 					{left: "word", right: ""},
 				},
 			},
-			wantResultLen: (len("word") + 1) * len(letters),
+			wantResultLen: (len("word") + 1) * len([]rune(letters)),
 		},
 	}
 	for _, tt := range tests {
@@ -259,8 +259,8 @@ func TestSimpleEdits(t *testing.T) {
 			},
 			wantResultLen: len("cabbage") + // deletes
 				len("cabbage") - 1 + // transposes
-				len("cabbage")*len(letters) + // replaces
-				(len("cabbage")+1)*len(letters), // inserts
+				len("cabbage")*len([]rune(letters)) + // replaces
+				(len("cabbage")+1)*len([]rune(letters)), // inserts
 		},
 	}
 	for _, tt := range tests {
