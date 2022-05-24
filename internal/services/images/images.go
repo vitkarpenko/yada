@@ -14,6 +14,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 
+	"github.com/vitkarpenko/yada/internal/spelling"
 	"github.com/vitkarpenko/yada/internal/utils"
 )
 
@@ -98,16 +99,17 @@ func limitFilesCount(files []*discordgo.File) []*discordgo.File {
 }
 
 func (s *Service) loadInBackground() {
-	s.process()
+	s.processMessages()
+	fmt.Println(len(s.images))
 	ticker := time.NewTicker(20 * time.Second)
 	go func() {
 		for range ticker.C {
-			s.process()
+			s.processMessages()
 		}
 	}()
 }
 
-func (s *Service) process() {
+func (s *Service) processMessages() {
 	var currentLastID string
 
 	for {
@@ -186,15 +188,19 @@ func (s *Service) downloader(
 
 func (s *Service) setTokens(triggerWords []string, images Images) {
 	for _, w := range triggerWords {
-		mergedBodies := append(s.images[strings.ToLower(w)].Bodies, images.Bodies...)
-		s.setBodies(w, mergedBodies)
+		w = strings.ToLower(w)
+		edits := spelling.SimpleEdits(w)
+		for _, edit := range edits {
+			mergedBodies := append(s.images[edit].Bodies, images.Bodies...)
+			s.setBodies(edit, mergedBodies)
+		}
 	}
 }
 
-func (s *Service) setBodies(w string, mergedBodies []Body) {
-	imagesEntry := s.images[strings.ToLower(w)]
+func (s *Service) setBodies(token string, mergedBodies []Body) {
+	imagesEntry := s.images[token]
 	imagesEntry.Bodies = mergedBodies
-	s.images[strings.ToLower(w)] = imagesEntry
+	s.images[token] = imagesEntry
 }
 
 func readImageBodyFromAttach(a *discordgo.MessageAttachment) []byte {
