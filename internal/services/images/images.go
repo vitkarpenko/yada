@@ -19,10 +19,11 @@ import (
 )
 
 const (
-	downloadWorkersCount   = 50
-	imagesPerReactionLimit = 5
-	loadMessagesLimit      = 100
-	wrongImageChance       = 0.02
+	downloadWorkersCount      = 50
+	imagesPerReactionLimit    = 5
+	loadMessagesLimit         = 100
+	wrongImageChance          = 0.02
+	minWordLenToCheckSpelling = 4
 )
 
 type Service struct {
@@ -189,12 +190,19 @@ func (s *Service) downloader(
 func (s *Service) setTokens(triggerWords []string, images Images) {
 	for _, w := range triggerWords {
 		w = strings.ToLower(w)
-		edits := spelling.SimpleEdits(w)
+		edits := wordEdits(w)
 		for _, edit := range edits {
 			mergedBodies := append(s.images[edit].Bodies, images.Bodies...)
 			s.setBodies(edit, mergedBodies)
 		}
 	}
+}
+
+func wordEdits(w string) []string {
+	if len(w) >= minWordLenToCheckSpelling {
+		return spelling.SimpleEdits(w)
+	}
+	return []string{w}
 }
 
 func (s *Service) setBodies(token string, mergedBodies []Body) {
