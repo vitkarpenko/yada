@@ -1,7 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
+	"fmt"
+	"io"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -20,6 +25,20 @@ func main() {
 	envconfig.MustProcess("YADA", &cfg)
 
 	yada := bot.NewYada(cfg)
+
+	swearFile, err := os.Open("data/swear.tar.gz")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer swearFile.Close()
+
+	r, err := gzip.NewReader(swearFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer r.Close()
+	uncompressed := bytes.NewBuffer(nil)
+	io.Copy(uncompressed, r)
 
 	yada.Run()
 }
