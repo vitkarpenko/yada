@@ -101,7 +101,6 @@ func limitFilesCount(files []*discordgo.File) []*discordgo.File {
 
 func (s *Service) loadInBackground() {
 	s.processMessages()
-	fmt.Println(len(s.images))
 	ticker := time.NewTicker(20 * time.Second)
 	go func() {
 		for range ticker.C {
