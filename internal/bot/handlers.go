@@ -48,7 +48,7 @@ func (y *Yada) RandomEmojiHandler(s *discordgo.Session, m *discordgo.MessageCrea
 		return
 	}
 
-	if utils.CheckChance(randomImageChance) {
+	if utils.CheckChance(randomEmojiChance) {
 		_, _ = y.Discord.ChannelMessageSendComplex(
 			m.ChannelID,
 			&discordgo.MessageSend{
