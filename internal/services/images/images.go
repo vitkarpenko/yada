@@ -135,6 +135,8 @@ func (s *Service) processMessages() {
 
 		currentLastID = messages[len(messages)-1].ID
 	}
+
+	fmt.Printf("Downloaded %d images", len(s.images))
 }
 
 func (s *Service) download(messages []*discordgo.Message) {
