@@ -6,6 +6,23 @@ import (
 	"testing"
 )
 
+var englishSplits = []split{
+	{left: []rune(""), right: []rune("word")},
+	{left: []rune("w"), right: []rune("ord")},
+	{left: []rune("wo"), right: []rune("rd")},
+	{left: []rune("wor"), right: []rune("d")},
+	{left: []rune("word"), right: []rune("")},
+}
+
+var russianSplits = []split{
+	{left: []rune(""), right: []rune("огонь")},
+	{left: []rune("о"), right: []rune("гонь")},
+	{left: []rune("ог"), right: []rune("онь")},
+	{left: []rune("ого"), right: []rune("нь")},
+	{left: []rune("огон"), right: []rune("ь")},
+	{left: []rune("огонь"), right: []rune("")},
+}
+
 func Test_splitWord(t *testing.T) {
 	type args struct {
 		word string
@@ -18,18 +35,9 @@ func Test_splitWord(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				word: "cabbage",
+				word: "word",
 			},
-			want: []split{
-				{left: "", right: "cabbage"},
-				{left: "c", right: "abbage"},
-				{left: "ca", right: "bbage"},
-				{left: "cab", right: "bage"},
-				{left: "cabb", right: "age"},
-				{left: "cabba", right: "ge"},
-				{left: "cabbag", right: "e"},
-				{left: "cabbage", right: ""},
-			},
+			want: englishSplits,
 		},
 	}
 	for _, tt := range tests {
@@ -53,13 +61,7 @@ func Test_deletes(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				splits: []split{
-					{left: "", right: "word"},
-					{left: "w", right: "ord"},
-					{left: "wo", right: "rd"},
-					{left: "wor", right: "d"},
-					{left: "word", right: ""},
-				},
+				splits: englishSplits,
 			},
 			wantResult: []string{
 				"ord",
@@ -98,13 +100,7 @@ func Test_transposes(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				splits: []split{
-					{left: "", right: "word"},
-					{left: "w", right: "ord"},
-					{left: "wo", right: "rd"},
-					{left: "wor", right: "d"},
-					{left: "word", right: ""},
-				},
+				splits: englishSplits,
 			},
 			wantResult: []string{
 				"owrd",
@@ -140,17 +136,18 @@ func Test_replaces(t *testing.T) {
 		wantResultLen int
 	}{
 		{
-			name: "ok",
+			name: "english",
 			args: args{
-				splits: []split{
-					{left: "", right: "word"},
-					{left: "w", right: "ord"},
-					{left: "wo", right: "rd"},
-					{left: "wor", right: "d"},
-					{left: "word", right: ""},
-				},
+				splits: englishSplits,
 			},
 			wantResultLen: len("word") * len([]rune(letters)),
+		},
+		{
+			name: "russian",
+			args: args{
+				splits: russianSplits,
+			},
+			wantResultLen: len([]rune("огонь")) * len([]rune(letters)),
 		},
 	}
 	for _, tt := range tests {
@@ -182,13 +179,7 @@ func Test_inserts(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				splits: []split{
-					{left: "", right: "word"},
-					{left: "w", right: "ord"},
-					{left: "wo", right: "rd"},
-					{left: "wor", right: "d"},
-					{left: "word", right: ""},
-				},
+				splits: englishSplits,
 			},
 			wantResultLen: (len("word") + 1) * len([]rune(letters)),
 		},
@@ -217,26 +208,26 @@ func Test_swapFirstSymbols(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want string
+		want []rune
 	}{
 		{
 			name: "english",
 			args: args{
 				runes: []rune("water"),
 			},
-			want: "awter",
+			want: []rune("awter"),
 		},
 		{
 			name: "russian",
 			args: args{
-				runes: []rune("вода"),
+				runes: []rune("огонь"),
 			},
-			want: "овда",
+			want: []rune("гоонь"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := swapFirstRunes(tt.args.runes); got != tt.want {
+			if got := swapFirstChars(tt.args.runes); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("swapFirstSymbols() = %v, want %v", got, tt.want)
 			}
 		})

@@ -7,7 +7,7 @@ import (
 const letters = "abcdefghijklmnopqrstuvwxyzабвгдеёжзиклмнопрстуфхцчшщъыьэюя"
 
 type split struct {
-	left, right string
+	left, right []rune
 }
 
 func SimpleEdits(word string) (result []string) {
@@ -34,10 +34,10 @@ func SimpleEdits(word string) (result []string) {
 
 func deletes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 	for _, s := range splits {
-		if s.right == "" {
+		if len(s.right) == 0 {
 			continue
 		}
-		edits <- s.left + s.right[1:]
+		edits <- string(append(s.left, s.right[1:]...))
 	}
 
 	wg.Done()
@@ -45,11 +45,10 @@ func deletes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 
 func transposes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 	for _, s := range splits {
-		runes := []rune(s.right)
-		if len(runes) < 2 {
+		if len(s.right) < 2 {
 			continue
 		}
-		edits <- s.left + swapFirstRunes(runes)
+		edits <- string(append(s.left, swapFirstChars(s.right)...))
 	}
 
 	wg.Done()
@@ -57,11 +56,13 @@ func transposes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 
 func replaces(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 	for _, s := range splits {
-		if s.right == "" {
+		if len(s.right) == 0 {
 			continue
 		}
 		for _, l := range letters {
-			edits <- s.left + string(l) + s.right[1:]
+			edit := append(s.left, l)
+			edit = append(edit, s.right[1:]...)
+			edits <- string(edit)
 		}
 	}
 
@@ -71,7 +72,9 @@ func replaces(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 func inserts(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 	for _, s := range splits {
 		for _, l := range letters {
-			edits <- s.left + string(l) + s.right
+			edit := append(s.left, l)
+			edit = append(edit, s.right...)
+			edits <- string(edit)
 		}
 	}
 
@@ -79,21 +82,22 @@ func inserts(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 }
 
 func splitWord(word string) []split {
-	splits := make([]split, len(word)+1)
+	runes := []rune(word)
+	splits := make([]split, len(runes)+1)
 
-	for i := 0; i <= len(word); i++ {
+	for i := 0; i <= len(runes); i++ {
 		splits[i] = split{
-			left:  word[:i],
-			right: word[i:],
+			left:  runes[:i],
+			right: runes[i:],
 		}
 	}
 
 	return splits
 }
 
-func swapFirstRunes(runes []rune) string {
+func swapFirstChars(runes []rune) []rune {
 	runes[1], runes[0] = runes[0], runes[1]
-	return string(runes)
+	return runes
 }
 
 func chanToSlice[T any](c chan T) (result []T) {
