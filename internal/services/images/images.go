@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
@@ -201,7 +202,7 @@ func (s *Service) setTokens(triggerWords []string, images Images) {
 }
 
 func wordEdits(w string) []string {
-	if len(w) >= minWordLenToCheckSpelling {
+	if utf8.RuneCountInString(w) >= minWordLenToCheckSpelling {
 		return spelling.SimpleEdits(w)
 	}
 	return []string{w}
