@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/bwmarrin/discordgo"
@@ -31,7 +30,6 @@ func (y *Yada) ReactWithImageHandler(ds *discordgo.Session, m *discordgo.Message
 		}
 	} else {
 		files = y.Images.GetFilesToSend(words)
-		fmt.Println(files)
 	}
 
 	if len(files) != 0 {
