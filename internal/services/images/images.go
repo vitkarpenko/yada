@@ -145,6 +145,10 @@ func (s *Service) download(messages []*discordgo.Message) {
 
 	jobs := make(chan discordgo.Message, len(messages))
 	for _, m := range messages {
+		// Ignore all messages created by the bot itself.
+		if m.Author.ID == s.discord.State.User.ID {
+			continue
+		}
 		jobs <- *m
 	}
 	close(jobs)

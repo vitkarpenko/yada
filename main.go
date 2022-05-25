@@ -36,7 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer r.Close()
-	uncompressed := bytes.NewBuffer(nil)
+	uncompressed := new(bytes.Buffer)
 	io.Copy(uncompressed, r)
 
 	yada.Run()
