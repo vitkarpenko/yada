@@ -95,7 +95,6 @@ func (s *Service) loadSwears() {
 		for _, w := range swears[i:end] {
 			var wordEdits []string
 			if utf8.RuneCountInString(w) < minWordLengthToSpellcheck {
-				fmt.Println(w)
 				wordEdits = []string{w}
 			} else {
 				wordEdits = spelling.SimpleEdits(w)
