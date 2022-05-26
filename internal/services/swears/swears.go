@@ -17,6 +17,7 @@ import (
 )
 
 var (
+	swearsPath            = "data/swears.gz"
 	punishmentPhrasesPath = "data/swearsPunishPhrases.txt"
 	punishmentImagesPath  = "data/swearsPunishImages"
 )
@@ -53,7 +54,7 @@ func (s *Service) PunishmentPhrase() string {
 func (s *Service) loadSwears() {
 	s.swears = make(map[string]struct{})
 
-	swearFile, err := os.Open("data/swear.tar.gz")
+	swearFile, err := os.Open(swearsPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -86,7 +87,7 @@ func (s *Service) loadPunishmentImages() {
 			if info.IsDir() {
 				return nil
 			}
-			
+
 			f, err := os.Open(path)
 			if err != nil {
 				return err
