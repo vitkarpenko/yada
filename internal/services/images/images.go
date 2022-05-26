@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
@@ -20,12 +19,11 @@ import (
 )
 
 const (
-	downloadWorkersCount      = 50
-	imagesPerReactionLimit    = 5
-	loadMessagesLimit         = 100
-	wrongImageChance          = 0.02
-	minWordLenToCheckSpelling = 4
-	redownloadTimeout         = 2 * time.Minute
+	downloadWorkersCount   = 50
+	imagesPerReactionLimit = 5
+	loadMessagesLimit      = 100
+	wrongImageChance       = 0.02
+	redownloadTimeout      = 2 * time.Minute
 )
 
 type Service struct {
@@ -145,10 +143,6 @@ func (s *Service) download(messages []*discordgo.Message) {
 
 	jobs := make(chan discordgo.Message, len(messages))
 	for _, m := range messages {
-		// Ignore all messages created by the bot itself.
-		if m.Author.ID == s.discord.State.User.ID {
-			continue
-		}
 		jobs <- *m
 	}
 	close(jobs)
@@ -206,10 +200,7 @@ func (s *Service) setTokens(triggerWords []string, images Images) {
 }
 
 func wordEdits(w string) []string {
-	if utf8.RuneCountInString(w) >= minWordLenToCheckSpelling {
-		return spelling.SimpleEdits(w)
-	}
-	return []string{w}
+	return spelling.SimpleEdits(w, true)
 }
 
 func (s *Service) setBodies(token string, mergedBodies []Body) {
