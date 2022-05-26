@@ -2,15 +2,23 @@ package spelling
 
 import (
 	"sync"
+	"unicode/utf8"
 )
 
-const letters = "abcdefghijklmnopqrstuvwxyzабвгдеёжзиклмнопрстуфхцчшщъыьэюя"
+const (
+	letters                   = "abcdefghijklmnopqrstuvwxyzабвгдеёжзиклмнопрстуфхцчшщъыьэюя"
+	minWordLenToCheckSpelling = 4
+)
 
 type split struct {
 	left, right []rune
 }
 
-func SimpleEdits(word string) (result []string) {
+func SimpleEdits(word string, checkMinLength bool) (result []string) {
+	if checkMinLength && utf8.RuneCountInString(word) < minWordLenToCheckSpelling {
+		return []string{word}
+	}
+
 	splits := splitWord(word)
 
 	editFuncs := []func(splits []split, wg *sync.WaitGroup, edits chan<- string){
@@ -37,6 +45,10 @@ func SimpleEdits(word string) (result []string) {
 
 func deletes(splits []split, wg *sync.WaitGroup, edits chan<- string) {
 	for _, s := range splits {
+		// Do not shorten minimum length words.
+		if len(s.left)+len(s.right) == minWordLenToCheckSpelling {
+			continue
+		}
 		if len(s.right) == 0 {
 			continue
 		}

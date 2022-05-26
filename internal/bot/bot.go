@@ -8,6 +8,7 @@ import (
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/internal/services/emojis"
 	"github.com/vitkarpenko/yada/internal/services/images"
+	"github.com/vitkarpenko/yada/internal/services/swears"
 	"github.com/vitkarpenko/yada/internal/utils"
 )
 
@@ -18,6 +19,7 @@ type Yada struct {
 
 	Images *images.Service
 	Emojis *emojis.Service
+	Swears *swears.Service
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -31,6 +33,7 @@ func NewYada(cfg config.Config) *Yada {
 		Config:  cfg,
 		Images:  images.New(discordSession, cfg.ImagesChannelID),
 		Emojis:  emojis.New(discordSession, cfg.GuildID),
+		Swears:  swears.New(),
 	}
 
 	yada.setupIntents()
@@ -74,6 +77,5 @@ func (y *Yada) setupHandlers() {
 	})
 
 	// Add other handlers.
-	y.Discord.AddHandler(y.ReactWithImageHandler)
-	y.Discord.AddHandler(y.RandomEmojiHandler)
+	y.Discord.AddHandler(y.AllMessagesHandler)
 }
