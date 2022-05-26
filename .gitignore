@@ -17,3 +17,5 @@
 .idea/
 
 .env
+
+data/sqlite.db

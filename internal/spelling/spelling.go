@@ -2,7 +2,6 @@ package spelling
 
 import (
 	"sync"
-	"unicode/utf8"
 )
 
 const (
@@ -14,11 +13,7 @@ type split struct {
 	left, right []rune
 }
 
-func SimpleEdits(word string, checkMinLength bool) (result []string) {
-	if checkMinLength && utf8.RuneCountInString(word) < minWordLenToCheckSpelling {
-		return []string{word}
-	}
-
+func SimpleEdits(word string) (result []string) {
 	splits := splitWord(word)
 
 	editFuncs := []func(splits []split, wg *sync.WaitGroup, edits chan<- string){
@@ -40,7 +35,7 @@ func SimpleEdits(word string, checkMinLength bool) (result []string) {
 		close(edits)
 	}()
 
-	return chanToSlice(edits)
+	return append(chanToSlice(edits), word)
 }
 
 func deletes(splits []split, wg *sync.WaitGroup, edits chan<- string) {

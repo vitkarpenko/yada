@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
@@ -19,11 +20,12 @@ import (
 )
 
 const (
-	downloadWorkersCount   = 50
-	imagesPerReactionLimit = 5
-	loadMessagesLimit      = 100
-	wrongImageChance       = 0.02
-	redownloadTimeout      = 2 * time.Minute
+	downloadWorkersCount      = 50
+	imagesPerReactionLimit    = 5
+	loadMessagesLimit         = 100
+	wrongImageChance          = 0.02
+	redownloadTimeout         = 2 * time.Minute
+	minWordLengthToSpellcheck = 4
 )
 
 type Service struct {
@@ -191,16 +193,19 @@ func (s *Service) downloader(
 func (s *Service) setTokens(triggerWords []string, images Images) {
 	for _, w := range triggerWords {
 		w = strings.ToLower(w)
-		edits := wordEdits(w)
+
+		var edits []string
+		if utf8.RuneCountInString(w) < minWordLengthToSpellcheck {
+			edits = []string{w}
+		} else {
+			edits = spelling.SimpleEdits(w)
+		}
+
 		for _, edit := range edits {
 			mergedBodies := append(s.images[edit].Bodies, images.Bodies...)
 			s.setBodies(edit, mergedBodies)
 		}
 	}
-}
-
-func wordEdits(w string) []string {
-	return spelling.SimpleEdits(w, true)
 }
 
 func (s *Service) setBodies(token string, mergedBodies []Body) {

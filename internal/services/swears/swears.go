@@ -11,36 +11,45 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"unicode/utf8"
 
 	"github.com/vitkarpenko/yada/internal/services/images"
+	"github.com/vitkarpenko/yada/internal/services/storage/sqlite"
 	"github.com/vitkarpenko/yada/internal/spelling"
 )
 
-var (
-	swearsPath            = "data/swears.gz"
-	punishmentPhrasesPath = "data/swearsPunishPhrases.txt"
-	punishmentImagesPath  = "data/swearsPunishImages"
+const (
+	swearsPath                = "data/swears.gz"
+	punishmentPhrasesPath     = "data/swearsPunishPhrases.txt"
+	punishmentImagesPath      = "data/swearsPunishImages"
+	uploadChunkSize           = 5000
+	minWordLengthToSpellcheck = 4
 )
 
 type Service struct {
-	swears            map[string]struct{}
+	db                *sqlite.DB
 	punishmentImages  images.Images
 	punishmentPhrases []string
 }
 
-func New() *Service {
-	service := &Service{}
-	service.loadSwears()
+func New(db *sqlite.DB) *Service {
+	service := &Service{db: db}
+	if db.ShouldFillSwears() {
+		service.loadSwears()
+	}
 	service.loadPunishmentImages()
 	service.loadPunishmentPhrases()
 	return service
 }
 
-func (s *Service) IsSwear(word string) bool {
-	if _, ok := s.swears[word]; ok {
-		return true
+func (s *Service) HasSwear(phrase []string) string {
+	swear, err := s.db.HasSwear(phrase)
+	if err != nil {
+		fmt.Println("Error while checking swearing:", err)
+		return ""
 	}
-	return false
+
+	return swear
 }
 
 func (s *Service) PunishmentImage() images.Body {
@@ -52,7 +61,7 @@ func (s *Service) PunishmentPhrase() string {
 }
 
 func (s *Service) loadSwears() {
-	s.swears = make(map[string]struct{})
+	swears := make([]string, 0)
 
 	swearFile, err := os.Open(swearsPath)
 	if err != nil {
@@ -72,10 +81,37 @@ func (s *Service) loadSwears() {
 	scanner := bufio.NewScanner(uncompressed)
 	for scanner.Scan() {
 		word := scanner.Text()
-		s.addSwear(word)
+		swears = append(swears, word)
 	}
 
-	fmt.Printf("Loaded up swears. %d words in dictionary!\n", len(s.swears))
+	var count int
+	for i := 0; i < len(swears); i += uploadChunkSize {
+		end := i + uploadChunkSize
+		if end > len(swears) {
+			end = len(swears)
+		}
+
+		edits := make([]string, 0)
+		for _, w := range swears[i:end] {
+			var wordEdits []string
+			if utf8.RuneCountInString(w) < minWordLengthToSpellcheck {
+				fmt.Println(w)
+				wordEdits = []string{w}
+			} else {
+				wordEdits = spelling.SimpleEdits(w)
+			}
+
+			edits = append(edits, wordEdits...)
+			count += len(wordEdits)
+			if count%100_000 == 0 {
+				fmt.Printf("Uploaded %d count swears.\n", count)
+			}
+		}
+
+		s.db.UploadSwears(edits)
+	}
+
+	fmt.Printf("Loaded up swears. %d words in dictionary!\n", count)
 }
 
 func (s *Service) loadPunishmentImages() {
@@ -129,12 +165,4 @@ func (s *Service) loadPunishmentPhrases() {
 	s.punishmentPhrases = phrases
 
 	fmt.Printf("Loaded up swear punishment %d phrases.\n", len(s.punishmentPhrases))
-}
-
-func (s *Service) addSwear(word string) {
-	s.swears[word] = struct{}{}
-	edits := spelling.SimpleEdits(word, false)
-	for _, e := range edits {
-		s.swears[e] = struct{}{}
-	}
 }
