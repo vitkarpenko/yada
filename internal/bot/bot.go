@@ -8,6 +8,7 @@ import (
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/internal/services/emojis"
 	"github.com/vitkarpenko/yada/internal/services/images"
+	"github.com/vitkarpenko/yada/internal/services/storage/sqlite"
 	"github.com/vitkarpenko/yada/internal/services/swears"
 	"github.com/vitkarpenko/yada/internal/utils"
 )
@@ -28,12 +29,14 @@ func NewYada(cfg config.Config) *Yada {
 		log.Fatalln("Couldn't create discord session!", err)
 	}
 
+	db := sqlite.New()
+
 	yada := &Yada{
 		Discord: discordSession,
 		Config:  cfg,
 		Images:  images.New(discordSession, cfg.ImagesChannelID),
 		Emojis:  emojis.New(discordSession, cfg.GuildID),
-		Swears:  swears.New(),
+		Swears:  swears.New(db),
 	}
 
 	yada.setupIntents()

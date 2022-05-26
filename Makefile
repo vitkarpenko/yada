@@ -4,7 +4,7 @@ build:
 	docker build -t yada:$(COMMIT) .
 
 run: build
-	docker run --restart=always --name=yada -d yada:$(COMMIT)
+	docker run --restart=always --name=yada -v $(PWD)/data:/yada/data -d yada:$(COMMIT)
 
 stop:
 	docker kill yada && docker rm yada

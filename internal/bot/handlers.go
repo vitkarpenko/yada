@@ -72,24 +72,23 @@ func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 func (y *Yada) handleSwears(m *discordgo.MessageCreate) (isSwear bool) {
 	words := tokens.Tokenize(m.Content)
 
-	for _, w := range words {
-		if y.Swears.IsSwear(w) {
-			capitalizedWord := strings.Title(strings.ToLower(w))
-
-			_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-				Files: []*discordgo.File{
-					images.DiscordFileFromImage(y.Swears.PunishmentImage(), uuid.New().String()),
-				},
-				Content:   fmt.Sprintf("%s? %s", capitalizedWord, y.Swears.PunishmentPhrase()),
-				Reference: m.Reference(),
-			})
-			if err != nil {
-				log.Println("Couldn't send swear punishment.", err)
-			}
-
-			return true
-		}
+	swear := y.Swears.HasSwear(words)
+	if swear == "" {
+		return
 	}
 
-	return
+	capitalizedWord := strings.Title(strings.ToLower(swear))
+
+	_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		Files: []*discordgo.File{
+			images.DiscordFileFromImage(y.Swears.PunishmentImage(), uuid.New().String()),
+		},
+		Content:   fmt.Sprintf("%s? %s", capitalizedWord, y.Swears.PunishmentPhrase()),
+		Reference: m.Reference(),
+	})
+	if err != nil {
+		log.Println("Couldn't send swear punishment.", err)
+	}
+
+	return true
 }
