@@ -256,7 +256,7 @@ func TestSimpleEdits(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotResultLen := len(SimpleEdits(tt.args.word)); gotResultLen != tt.wantResultLen {
+			if gotResultLen := len(SimpleEdits(tt.args.word, true)); gotResultLen != tt.wantResultLen {
 				t.Errorf("len of SimpleEdits() = %v, want %v", gotResultLen, tt.wantResultLen)
 			}
 		})
