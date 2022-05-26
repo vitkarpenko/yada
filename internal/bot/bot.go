@@ -33,7 +33,7 @@ func NewYada(cfg config.Config) *Yada {
 		Config:  cfg,
 		Images:  images.New(discordSession, cfg.ImagesChannelID),
 		Emojis:  emojis.New(discordSession, cfg.GuildID),
-		// Swears:  swears.New(),
+		Swears:  swears.New(),
 	}
 
 	yada.setupIntents()

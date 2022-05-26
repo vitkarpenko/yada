@@ -23,10 +23,10 @@ func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCre
 		return
 	}
 
-	// isSwear := y.handleSwears(m)
-	// if isSwear {
-	// 	return
-	// }
+	isSwear := y.handleSwears(m)
+	if isSwear {
+		return
+	}
 	y.handleImages(m)
 	y.handleRandomEmoji(m)
 }
