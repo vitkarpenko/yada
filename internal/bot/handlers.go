@@ -1,7 +1,9 @@
 package bot
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
@@ -15,12 +17,37 @@ const (
 	randomEmojiChance = 0.02
 )
 
-func (y *Yada) ReactWithImageHandler(ds *discordgo.Session, m *discordgo.MessageCreate) {
+func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself.
-	if m.Author.ID == ds.State.User.ID {
+	if ds.State.User != nil && m.Author.ID == ds.State.User.ID {
 		return
 	}
 
+	isSwear := y.handleSwears(m)
+	if isSwear {
+		return
+	}
+	y.handleImages(m)
+	y.handleRandomEmoji(m)
+}
+
+func (y *Yada) handleRandomEmoji(m *discordgo.MessageCreate) {
+	if utils.CheckChance(randomEmojiChance) {
+		_, _ = y.Discord.ChannelMessageSendComplex(
+			m.ChannelID,
+			&discordgo.MessageSend{
+				Content: y.Emojis.Random(),
+				Reference: &discordgo.MessageReference{
+					MessageID: m.Message.ID,
+					ChannelID: m.ChannelID,
+					GuildID:   y.Config.GuildID,
+				},
+			},
+		)
+	}
+}
+
+func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 	words := tokens.Tokenize(m.Content)
 
 	var files []*discordgo.File
@@ -42,23 +69,27 @@ func (y *Yada) ReactWithImageHandler(ds *discordgo.Session, m *discordgo.Message
 	}
 }
 
-func (y *Yada) RandomEmojiHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// Ignore all messages created by the bot itself.
-	if m.Author.ID == s.State.User.ID {
-		return
+func (y *Yada) handleSwears(m *discordgo.MessageCreate) (isSwear bool) {
+	words := tokens.Tokenize(m.Content)
+
+	for _, w := range words {
+		if y.Swears.IsSwear(w) {
+			capitalizedWord := strings.Title(strings.ToLower(w))
+
+			_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+				Files: []*discordgo.File{
+					images.DiscordFileFromImage(y.Swears.PunishmentImage(), uuid.New().String()),
+				},
+				Content:   fmt.Sprintf("%s? %s", capitalizedWord, y.Swears.PunishmentPhrase()),
+				Reference: m.Reference(),
+			})
+			if err != nil {
+				log.Println("Couldn't send swear punishment.", err)
+			}
+
+			return true
+		}
 	}
 
-	if utils.CheckChance(randomEmojiChance) {
-		_, _ = y.Discord.ChannelMessageSendComplex(
-			m.ChannelID,
-			&discordgo.MessageSend{
-				Content: y.Emojis.Random(),
-				Reference: &discordgo.MessageReference{
-					MessageID: m.Message.ID,
-					ChannelID: m.ChannelID,
-					GuildID:   y.Config.GuildID,
-				},
-			},
-		)
-	}
+	return
 }
