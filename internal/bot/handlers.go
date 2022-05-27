@@ -1,9 +1,7 @@
 package bot
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
@@ -23,10 +21,6 @@ func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCre
 		return
 	}
 
-	isSwear := y.handleSwears(m)
-	if isSwear {
-		return
-	}
 	y.handleImages(m)
 	y.handleRandomEmoji(m)
 }
@@ -67,28 +61,4 @@ func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 			log.Println("Couldn't send an image.", err)
 		}
 	}
-}
-
-func (y *Yada) handleSwears(m *discordgo.MessageCreate) (isSwear bool) {
-	words := tokens.Tokenize(m.Content)
-
-	swear := y.Swears.HasSwear(words)
-	if swear == "" {
-		return
-	}
-
-	capitalizedWord := strings.Title(strings.ToLower(swear))
-
-	_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-		Files: []*discordgo.File{
-			images.DiscordFileFromImage(y.Swears.PunishmentImage(), uuid.New().String()),
-		},
-		Content:   fmt.Sprintf("%s? %s", capitalizedWord, y.Swears.PunishmentPhrase()),
-		Reference: m.Reference(),
-	})
-	if err != nil {
-		log.Println("Couldn't send swear punishment.", err)
-	}
-
-	return true
 }
