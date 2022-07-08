@@ -113,9 +113,9 @@ func (s *Service) loadInBackground() {
 
 func (s *Service) processMessages() {
 	var currentLastID string
+	s.images = make(map[string]Images)
 
 	for {
-		s.images = make(map[string]Images)
 
 		messages, err := s.discord.ChannelMessages(
 			s.imagesChannelID,
