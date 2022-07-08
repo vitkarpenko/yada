@@ -120,8 +120,8 @@ func (s *Service) processMessages() {
 		messages, err := s.discord.ChannelMessages(
 			s.imagesChannelID,
 			loadMessagesLimit,
-			"",
 			currentLastID,
+			"",
 			"",
 		)
 		if err != nil {
