@@ -25,11 +25,16 @@ const (
 	loadMessagesLimit         = 100
 	wrongImageChance          = 0.02
 	redownloadTimeout         = 2 * time.Minute
+	cacheCleanPeriod          = 30 * time.Minute
 	minWordLengthToSpellcheck = 4
 )
 
 type Service struct {
-	images          map[string]Images
+	images map[string]Images
+
+	msgsIDsCache map[string]struct{}
+	cacheMu      sync.Mutex
+
 	discord         *discordgo.Session
 	imagesChannelID string
 }
@@ -37,9 +42,11 @@ type Service struct {
 func New(discord *discordgo.Session, imagesChannelID string) *Service {
 	service := &Service{
 		discord:         discord,
+		msgsIDsCache:    make(map[string]struct{}),
 		imagesChannelID: imagesChannelID,
 	}
 	service.loadInBackground()
+	service.cleanCachePeriodically()
 	return service
 }
 
@@ -111,6 +118,17 @@ func (s *Service) loadInBackground() {
 	}()
 }
 
+func (s *Service) cleanCachePeriodically() {
+	ticker := time.NewTicker(cacheCleanPeriod)
+	go func() {
+		for range ticker.C {
+			s.cacheMu.Lock()
+			s.msgsIDsCache = make(map[string]struct{})
+			s.cacheMu.Unlock()
+		}
+	}()
+}
+
 func (s *Service) processMessages() {
 	var currentLastID string
 	s.images = make(map[string]Images)
@@ -145,6 +163,13 @@ func (s *Service) download(messages []*discordgo.Message) {
 
 	jobs := make(chan discordgo.Message, len(messages))
 	for _, m := range messages {
+		if _, ok := s.msgsIDsCache[m.ID]; ok {
+			continue
+		}
+		s.cacheMu.Lock()
+		s.msgsIDsCache[m.ID] = struct{}{}
+		s.cacheMu.Unlock()
+
 		jobs <- *m
 	}
 	close(jobs)
