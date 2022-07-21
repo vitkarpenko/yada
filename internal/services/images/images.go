@@ -42,6 +42,7 @@ type Service struct {
 func New(discord *discordgo.Session, imagesChannelID string) *Service {
 	service := &Service{
 		discord:         discord,
+		images:          make(map[string]Images),
 		msgsIDsCache:    make(map[string]struct{}),
 		imagesChannelID: imagesChannelID,
 	}
