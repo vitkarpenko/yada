@@ -24,7 +24,7 @@ const (
 	imagesPerReactionLimit    = 5
 	loadMessagesLimit         = 100
 	wrongImageChance          = 0.02
-	redownloadTimeout         = 2 * time.Minute
+	redownloadTimeout         = 20 * time.Second
 	cacheCleanPeriod          = 30 * time.Minute
 	minWordLengthToSpellcheck = 4
 )
