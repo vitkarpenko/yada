@@ -33,7 +33,7 @@ type Service struct {
 	images map[string]Images
 
 	msgsIDsCache map[string]struct{}
-	cacheMu      sync.Mutex
+	mu           sync.Mutex
 
 	discord         *discordgo.Session
 	imagesChannelID string
@@ -113,7 +113,9 @@ func (s *Service) loadInBackground() {
 	ticker := time.NewTicker(redownloadTimeout)
 	go func() {
 		for range ticker.C {
+			s.mu.Lock()
 			s.processMessages()
+			s.mu.Unlock()
 		}
 	}()
 }
@@ -122,19 +124,19 @@ func (s *Service) cleanCachePeriodically() {
 	ticker := time.NewTicker(cacheCleanPeriod)
 	go func() {
 		for range ticker.C {
-			s.cacheMu.Lock()
+			s.mu.Lock()
 			s.msgsIDsCache = make(map[string]struct{})
-			s.cacheMu.Unlock()
+			s.images = make(map[string]Images)
+			s.processMessages()
+			s.mu.Unlock()
 		}
 	}()
 }
 
 func (s *Service) processMessages() {
 	var currentLastID string
-	s.images = make(map[string]Images)
 
 	for {
-
 		messages, err := s.discord.ChannelMessages(
 			s.imagesChannelID,
 			loadMessagesLimit,
@@ -166,9 +168,9 @@ func (s *Service) download(messages []*discordgo.Message) {
 		if _, ok := s.msgsIDsCache[m.ID]; ok {
 			continue
 		}
-		s.cacheMu.Lock()
+		s.mu.Lock()
 		s.msgsIDsCache[m.ID] = struct{}{}
-		s.cacheMu.Unlock()
+		s.mu.Unlock()
 
 		jobs <- *m
 	}
