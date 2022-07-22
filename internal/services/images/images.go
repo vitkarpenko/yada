@@ -89,6 +89,8 @@ func (s *Service) GetFilesToSend(words []string) []*discordgo.File {
 				DiscordFileFromImage(s.Random(), uuid.New().String()),
 			)
 		} else {
+			fmt.Println(len(s.images))
+			fmt.Println(len(image.Bodies))
 			imageToShowIndex := rand.Intn(len(image.Bodies))
 			imageToShow := image.Bodies[imageToShowIndex]
 			files = append(files, DiscordFileFromImage(imageToShow, image.MessageID))
@@ -166,13 +168,6 @@ func (s *Service) download(messages []*discordgo.Message) {
 
 	jobs := make(chan discordgo.Message, len(messages))
 	for _, m := range messages {
-		if _, ok := s.msgsIDsCache[m.ID]; ok {
-			continue
-		}
-		s.mu.Lock()
-		s.msgsIDsCache[m.ID] = struct{}{}
-		s.mu.Unlock()
-
 		jobs <- *m
 	}
 	close(jobs)
