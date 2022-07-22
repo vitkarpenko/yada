@@ -89,8 +89,6 @@ func (s *Service) GetFilesToSend(words []string) []*discordgo.File {
 				DiscordFileFromImage(s.Random(), uuid.New().String()),
 			)
 		} else {
-			fmt.Println(len(s.images))
-			fmt.Println(len(image.Bodies))
 			imageToShowIndex := rand.Intn(len(image.Bodies))
 			imageToShow := image.Bodies[imageToShowIndex]
 			files = append(files, DiscordFileFromImage(imageToShow, image.MessageID))
