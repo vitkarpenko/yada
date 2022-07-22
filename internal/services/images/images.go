@@ -166,12 +166,10 @@ func (s *Service) download(messages []*discordgo.Message) {
 
 	jobs := make(chan discordgo.Message, len(messages))
 	for _, m := range messages {
-		s.mu.Lock()
 		if _, ok := s.msgsIDsCache[m.ID]; ok {
 			continue
 		}
 		s.msgsIDsCache[m.ID] = struct{}{}
-		s.mu.Unlock()
 
 		jobs <- *m
 	}
