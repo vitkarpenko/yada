@@ -2,6 +2,8 @@ package bot
 
 import (
 	"log"
+	"math/rand"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -39,6 +41,8 @@ func NewYada(cfg config.Config) *Yada {
 }
 
 func (y *Yada) Run() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	err := y.Discord.Open()
 	if err != nil {
 		log.Fatalln("Couldn't open websocket connection to discord!", err)
