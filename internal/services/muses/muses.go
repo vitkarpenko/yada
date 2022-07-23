@@ -60,7 +60,7 @@ func (s *Service) HandleMessage(m *discordgo.MessageCreate) {
 		rating = normDistributedRating(7.7, 1.4)
 	case m.Author.ID == s.config.OlegUserID:
 		log.Println("A muse by Oleg!")
-		rating = normDistributedRating(5, 1.7)
+		rating = normDistributedRating(7.9, 1.7)
 	case m.Author.ID == s.config.VeraUserID:
 		log.Println("A muse by Vera!")
 		rating = 12
