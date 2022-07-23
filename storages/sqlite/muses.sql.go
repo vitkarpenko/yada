@@ -10,8 +10,8 @@ import (
 )
 
 const createMuse = `-- name: CreateMuse :exec
-INSERT INTO
-    muse (hash, rating)
+INSERT
+    OR IGNORE INTO muse (hash, rating)
 VALUES
     (?, ?)
 `

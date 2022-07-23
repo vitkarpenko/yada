@@ -1,7 +1,6 @@
 -- +goose Up
 CREATE TABLE muse (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    hash TEXT NOT NULL,
+    hash TEXT PRIMARY KEY,
     rating INTEGER NOT NULL
 );
 
