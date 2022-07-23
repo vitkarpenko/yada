@@ -49,24 +49,10 @@ func (s *Service) HandleMessage(m *discordgo.MessageCreate) {
 	}
 
 	var rating int
-	switch {
-	case err != sql.ErrNoRows:
+	if err != sql.ErrNoRows {
 		rating = int(savedMuseRating)
-	case m.Author.ID == s.config.VitalyUserID:
-		log.Println("A muse by Vitaly!")
-		rating = normDistributedRating(10.8, 1)
-	case m.Author.ID == s.config.LezhikUserID:
-		log.Println("A muse by Lezhik!")
-		rating = normDistributedRating(6.8, 1.8)
-	case m.Author.ID == s.config.OlegUserID:
-		log.Println("A muse by Oleg!")
-		rating = normDistributedRating(4.2, 1.7)
-	case m.Author.ID == s.config.VeraUserID:
-		log.Println("A muse by Vera!")
-		rating = 12
-	default:
-		log.Printf("A muse by %s!\n", m.Author.Username)
-		rating = normDistributedRating(6, 1.8)
+	} else {
+		rating = normDistributedRating(6, 2)
 	}
 
 	var (
