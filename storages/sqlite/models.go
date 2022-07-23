@@ -7,7 +7,6 @@ package sqlite
 import ()
 
 type Muse struct {
-	ID     int64
 	Hash   string
 	Rating int64
 }
