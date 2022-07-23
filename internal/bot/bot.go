@@ -10,7 +10,9 @@ import (
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/internal/services/emojis"
 	"github.com/vitkarpenko/yada/internal/services/images"
+	"github.com/vitkarpenko/yada/internal/services/muses"
 	"github.com/vitkarpenko/yada/internal/utils"
+	"github.com/vitkarpenko/yada/storages/sqlite"
 )
 
 type Yada struct {
@@ -18,8 +20,11 @@ type Yada struct {
 	Discord  *discordgo.Session
 	Config   config.Config
 
+	Queries *sqlite.Queries
+
 	Images *images.Service
 	Emojis *emojis.Service
+	Muses  *muses.Service
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -31,13 +36,26 @@ func NewYada(cfg config.Config) *Yada {
 	yada := &Yada{
 		Discord: discordSession,
 		Config:  cfg,
-		Images:  images.New(discordSession, cfg.ImagesChannelID),
-		Emojis:  emojis.New(discordSession, cfg.GuildID),
 	}
+
+	initDB(yada)
+
+	initServices(yada, discordSession, cfg)
 
 	yada.setupIntents()
 
 	return yada
+}
+
+func initServices(yada *Yada, discordSession *discordgo.Session, cfg config.Config) {
+	yada.Images = images.New(discordSession, cfg.ImagesChannelID)
+	yada.Emojis = emojis.New(discordSession, cfg.GuildID)
+	yada.Muses = muses.New(discordSession, yada.Queries, cfg)
+}
+
+func initDB(yada *Yada) {
+	db := sqlite.NewDB()
+	yada.Queries = sqlite.New(db)
 }
 
 func (y *Yada) Run() {

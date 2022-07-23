@@ -1,0 +1,16 @@
+{
+  "version": "2",
+  "sql": [
+    {
+      "schema": "migrations",
+      "queries": "storages/sqlite/queries",
+      "engine": "sqlite",
+      "gen": {
+        "go": {
+          "package": "sqlite",
+          "out": "storages/sqlite"
+        }
+      }
+    }
+  ]
+}

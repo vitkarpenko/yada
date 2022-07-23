@@ -1,9 +1,7 @@
 package bot
 
 import (
-	"fmt"
 	"log"
-	"math/rand"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
@@ -15,13 +13,6 @@ import (
 const (
 	randomImageChance = 0.01
 	randomEmojiChance = 0.02
-)
-
-var (
-	MehMuseEmojis     = []string{"(＃＞＜)", "<(￣ ﹌ ￣)>", "(＞﹏＜)", "ヾ( ￣O￣)ツ"}
-	FineMuseEmojis    = []string{"(￣_￣)・・・", "(•ิ_•ิ)?", "┐(￣ヘ￣;)┌", "ლ(ಠ_ಠ ლ)"}
-	AwesomeMuseEmojis = []string{"^ - ^", "(♡-_-♡)", "ヽ(♡‿♡)ノ", "♡( ◡‿◡ )"}
-	WaifuMuseEmojis   = []string{"o(≧▽≦)o", "(❤ω❤)", "♡＼(￣▽￣)／♡", "(*♡∀♡)"}
 )
 
 func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCreate) {
@@ -78,39 +69,5 @@ func (y *Yada) handleMuses(m *discordgo.MessageCreate) {
 		return
 	}
 
-	rating := rand.Intn(13)
-
-	var (
-		punctuation string
-		emojis      []string
-	)
-	switch {
-	case 0 <= rating && rating <= 3:
-		emojis = MehMuseEmojis
-		punctuation = "..."
-	case 4 <= rating && rating <= 7:
-		emojis = FineMuseEmojis
-		punctuation = "."
-	case 8 <= rating && rating <= 10:
-		emojis = AwesomeMuseEmojis
-		punctuation = "!"
-	case 11 <= rating && rating <= 12:
-		emojis = WaifuMuseEmojis
-		punctuation = "!!!"
-	}
-
-	emoji := emojis[rand.Intn(len(emojis))]
-	message := fmt.Sprintf("%d/12%s %s", rating, punctuation, emoji)
-
-	_, _ = y.Discord.ChannelMessageSendComplex(
-		m.ChannelID,
-		&discordgo.MessageSend{
-			Content: message,
-			Reference: &discordgo.MessageReference{
-				MessageID: m.Message.ID,
-				ChannelID: m.ChannelID,
-				GuildID:   y.Config.GuildID,
-			},
-		},
-	)
+	y.Muses.HandleMessage(m)
 }
