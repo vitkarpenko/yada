@@ -8,4 +8,6 @@ type Config struct {
 
 	ImagesChannelID string `envconfig:"YADA_IMAGES_CHANNEL_ID"`
 	MusesChannelID  string `envconfig:"YADA_MUSES_CHANNEL_ID"`
+
+	GachiSoundsDataPath string `envconfig:"YADA_GACHI_PATH" default:"data/gachi"`
 }

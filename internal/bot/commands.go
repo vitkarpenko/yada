@@ -45,6 +45,22 @@ func (y *Yada) InitializeCommands() {
 			},
 			Handler: y.ChoiceHandler,
 		},
+		"gachi": Command{
+			AppCommand: discordgo.ApplicationCommand{
+				Name:        "gachi",
+				Description: "Oh shit, I'm sorry!",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:         discordgo.ApplicationCommandOptionString,
+						Name:         "звук",
+						Description:  "Что проорать?",
+						Required:     true,
+						Autocomplete: true,
+					},
+				},
+			},
+			Handler: y.Gachi.Handler,
+		},
 	}
 
 	for _, c := range y.Commands {
