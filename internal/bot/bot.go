@@ -9,6 +9,7 @@ import (
 
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/internal/services/emojis"
+	"github.com/vitkarpenko/yada/internal/services/gachi"
 	"github.com/vitkarpenko/yada/internal/services/images"
 	"github.com/vitkarpenko/yada/internal/services/muses"
 	"github.com/vitkarpenko/yada/internal/utils"
@@ -25,6 +26,7 @@ type Yada struct {
 	Images *images.Service
 	Emojis *emojis.Service
 	Muses  *muses.Service
+	Gachi  *gachi.Service
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -38,24 +40,25 @@ func NewYada(cfg config.Config) *Yada {
 		Config:  cfg,
 	}
 
-	initDB(yada)
+	yada.initDB()
 
-	initServices(yada, discordSession, cfg)
+	yada.initServices(discordSession, cfg)
 
 	yada.setupIntents()
 
 	return yada
 }
 
-func initServices(yada *Yada, discordSession *discordgo.Session, cfg config.Config) {
-	yada.Images = images.New(discordSession, cfg.ImagesChannelID)
-	yada.Emojis = emojis.New(discordSession, cfg.GuildID)
-	yada.Muses = muses.New(discordSession, yada.Queries, cfg)
+func (y *Yada) initServices(discordSession *discordgo.Session, cfg config.Config) {
+	y.Images = images.New(discordSession, cfg.ImagesChannelID)
+	y.Emojis = emojis.New(discordSession, cfg.GuildID)
+	y.Muses = muses.New(discordSession, y.Queries, cfg)
+	y.Gachi = gachi.New(y.Config.GachiSoundsDataPath)
 }
 
-func initDB(yada *Yada) {
+func (y *Yada) initDB() {
 	db := sqlite.NewDB()
-	yada.Queries = sqlite.New(db)
+	y.Queries = sqlite.New(db)
 }
 
 func (y *Yada) Run() {
