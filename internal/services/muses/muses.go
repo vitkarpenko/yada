@@ -7,11 +7,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/storages/sqlite"
 )
@@ -45,7 +45,7 @@ func (s *Service) HandleMessage(m *discordgo.MessageCreate) {
 	hash := imageHash(m)
 	savedMuseRating, err := s.queries.GetMuseRating(context.Background(), hash)
 	if err != nil && err != sql.ErrNoRows {
-		log.Println("Error while fetching muse rating: ", err)
+		log.Error().Err(err).Msg("Error while fetching muse rating!")
 	}
 
 	var rating int
@@ -97,7 +97,7 @@ func (s *Service) HandleMessage(m *discordgo.MessageCreate) {
 		},
 	)
 	if err != nil {
-		log.Print("Error while creating a muse: ", err)
+		log.Error().Err(err).Msg("Error while creating a muse: ")
 	}
 }
 

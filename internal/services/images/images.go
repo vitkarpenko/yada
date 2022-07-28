@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
 	"github.com/vitkarpenko/yada/internal/spelling"
 	"github.com/vitkarpenko/yada/internal/utils"
@@ -146,7 +146,7 @@ func (s *Service) processMessages() {
 			"",
 		)
 		if err != nil {
-			log.Fatalln("Could not load images from image channel!", err)
+			log.Fatal().Err(err).Msg("Could not load images from image channel!")
 		}
 
 		s.download(messages)
@@ -158,7 +158,7 @@ func (s *Service) processMessages() {
 		currentLastID = messages[len(messages)-1].ID
 	}
 
-	fmt.Printf("Downloaded images. %d words in dictionary!\n", len(s.images))
+	log.Info().Int("dict_size", len(s.images)).Msg("Downloaded images!")
 }
 
 func (s *Service) download(messages []*discordgo.Message) {
