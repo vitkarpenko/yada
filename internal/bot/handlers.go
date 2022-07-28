@@ -1,10 +1,9 @@
 package bot
 
 import (
-	"log"
-
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"github.com/vitkarpenko/yada/internal/services/images"
 	"github.com/vitkarpenko/yada/internal/tokens"
 	"github.com/vitkarpenko/yada/internal/utils"
@@ -59,7 +58,7 @@ func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 			Files: files,
 		})
 		if err != nil {
-			log.Println("Couldn't send an image.", err)
+			log.Error().Err(err).Msg("Couldn't send an image.")
 		}
 	}
 }

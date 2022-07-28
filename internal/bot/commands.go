@@ -2,11 +2,11 @@ package bot
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
 type Command struct {
@@ -21,7 +21,7 @@ type Commands map[string]Command
 func (y *Yada) CleanupCommands() {
 	commands, err := y.Discord.ApplicationCommands(y.Config.AppID, y.Config.GuildID)
 	if err != nil {
-		log.Fatal("Cannot fetch commands.", err)
+		log.Fatal().Msg("Cannot fetch commands!")
 	}
 	for _, c := range commands {
 		_ = y.Discord.ApplicationCommandDelete(y.Config.AppID, y.Config.GuildID, c.ID)
@@ -71,7 +71,7 @@ func (y *Yada) InitializeCommands() {
 			appCommand,
 		)
 		if err != nil {
-			log.Fatalf("Cannot create '%v' command: %v", appCommand.Name, err)
+			log.Fatal().Err(err).Msgf("Cannot create '%v' command: %v", appCommand.Name)
 		}
 	}
 }

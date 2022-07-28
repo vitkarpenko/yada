@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/lithammer/fuzzysearch/fuzzy"
+	"github.com/rs/zerolog/log"
 )
 
 const maxAutocompleteOpts = 25
@@ -140,7 +140,7 @@ func (s *Service) setSounds() {
 				filename := filepath.Base(path)
 				splitted := strings.Split(filename, ".")
 				if len(splitted) != 2 || splitted[1] != "wav" {
-					log.Printf("Incorrect gachi sound file '%s', only .wav files are allowed", filename)
+					log.Warn().Msgf("Incorrect gachi sound file '%s', only .wav files are allowed", filename)
 					return nil
 				}
 				s.sounds = append(s.sounds, splitted[0])

@@ -2,10 +2,10 @@ package main
 
 import (
 	"embed"
-	"log"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog/log"
 
 	"github.com/vitkarpenko/yada/internal/bot"
 	"github.com/vitkarpenko/yada/internal/config"
@@ -18,7 +18,7 @@ var embedMigrations embed.FS
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Println(".env not found")
+		log.Fatal().Msg(".env not found")
 	}
 
 	var cfg config.Config

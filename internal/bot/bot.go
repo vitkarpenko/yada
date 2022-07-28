@@ -1,11 +1,11 @@
 package bot
 
 import (
-	"log"
 	"math/rand"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/internal/services/emojis"
@@ -32,7 +32,7 @@ type Yada struct {
 func NewYada(cfg config.Config) *Yada {
 	discordSession, err := discordgo.New("Bot " + cfg.Token)
 	if err != nil {
-		log.Fatalln("Couldn't create discord session!", err)
+		log.Fatal().Err(err).Msg("Couldn't create discord session!")
 	}
 
 	yada := &Yada{
@@ -66,7 +66,7 @@ func (y *Yada) Run() {
 
 	err := y.Discord.Open()
 	if err != nil {
-		log.Fatalln("Couldn't open websocket connection to discord!", err)
+		log.Fatal().Err(err).Msg("Couldn't open websocket connection to discord!")
 	}
 	defer func(Discord *discordgo.Session) {
 		_ = Discord.Close()
