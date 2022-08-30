@@ -21,4 +21,4 @@ pull:
 update: pull build stop run
 
 deploy:
-	ssh vitkarpenko@pi 'cd yada; make update'	
+	ssh vitkarpenko@pi 'cd yada; make update'
