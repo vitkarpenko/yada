@@ -14,9 +14,9 @@ type TenorResponse struct {
 	Results []struct {
 		ID           string `json:"id"`
 		MediaFormats struct {
-			TinyGIF struct {
+			Gif struct {
 				URL string `json:"url"`
-			} `json:"tinygif"`
+			} `json:"gif"`
 		} `json:"media_formats"`
 	} `json:"results"`
 }
@@ -43,5 +43,5 @@ func (s *Service) RandomGifURL() (string, error) {
 		return "", fmt.Errorf("too much images from tenor: %d", len(data.Results))
 	}
 
-	return data.Results[0].MediaFormats.TinyGIF.URL, nil
+	return data.Results[0].MediaFormats.Gif.URL, nil
 }
