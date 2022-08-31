@@ -3,14 +3,13 @@ package bot
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
-	"github.com/vitkarpenko/yada/internal/services/images"
 	"github.com/vitkarpenko/yada/internal/tokens"
 	"github.com/vitkarpenko/yada/internal/utils"
 )
 
 const (
-	randomImageChance = 0.1
-	randomEmojiChance = 0.04
+	randomImageChance = 0.02
+	randomEmojiChance = 0.02
 )
 
 func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCreate) {
@@ -43,20 +42,20 @@ func (y *Yada) handleRandomEmoji(m *discordgo.MessageCreate) {
 func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 	words := tokens.Tokenize(m.Content)
 
-	var files []*discordgo.File
 	if utils.CheckChance(randomImageChance) {
-		randomImage, err := y.Images.Random()
+		randomImageURL, err := y.Images.RandomGifURL()
 		if err != nil {
 			log.Err(err).Msg("Error while fetching random gif")
 			return
 		}
-		files = []*discordgo.File{
-			images.DiscordFileFromImage(randomImage, "video/mp4"),
+		_, err = y.Discord.ChannelMessageSend(m.ChannelID, randomImageURL)
+		if err != nil {
+			log.Error().Err(err).Msg("Couldn't send an image.")
 		}
-	} else {
-		files = y.Images.GetFilesToSend(words)
+		return
 	}
 
+	files := y.Images.GetFilesToSend(words)
 	if len(files) != 0 {
 		_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Files: files,
