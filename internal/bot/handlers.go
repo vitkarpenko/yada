@@ -28,12 +28,8 @@ func (y *Yada) handleRandomEmoji(m *discordgo.MessageCreate) {
 		_, _ = y.Discord.ChannelMessageSendComplex(
 			m.ChannelID,
 			&discordgo.MessageSend{
-				Content: y.Emojis.Random(),
-				Reference: &discordgo.MessageReference{
-					MessageID: m.Message.ID,
-					ChannelID: m.ChannelID,
-					GuildID:   y.Config.GuildID,
-				},
+				Content:   y.Emojis.Random(),
+				Reference: y.refFromMessage(m),
 			},
 		)
 	}
@@ -48,7 +44,10 @@ func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 			log.Err(err).Msg("Error while fetching random gif")
 			return
 		}
-		_, err = y.Discord.ChannelMessageSend(m.ChannelID, randomImageURL)
+		_, err = y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Content:   randomImageURL,
+			Reference: y.refFromMessage(m),
+		})
 		if err != nil {
 			log.Error().Err(err).Msg("Couldn't send an image.")
 		}
@@ -58,7 +57,8 @@ func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 	files := y.Images.GetFilesToSend(words)
 	if len(files) != 0 {
 		_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Files: files,
+			Files:     files,
+			Reference: y.refFromMessage(m),
 		})
 		if err != nil {
 			log.Error().Err(err).Msg("Couldn't send an image.")
@@ -72,4 +72,12 @@ func (y *Yada) handleMuses(m *discordgo.MessageCreate) {
 	}
 
 	y.Muses.HandleMessage(m)
+}
+
+func (y *Yada) refFromMessage(m *discordgo.MessageCreate) *discordgo.MessageReference {
+	return &discordgo.MessageReference{
+		MessageID: m.ID,
+		ChannelID: m.ChannelID,
+		GuildID:   y.Config.GuildID,
+	}
 }
