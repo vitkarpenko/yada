@@ -50,7 +50,7 @@ func NewYada(cfg config.Config) *Yada {
 }
 
 func (y *Yada) initServices(discordSession *discordgo.Session, cfg config.Config) {
-	y.Images = images.New(discordSession, cfg.ImagesChannelID)
+	y.Images = images.New(discordSession, cfg.ImagesChannelID, cfg.TenorAPIKey)
 	y.Emojis = emojis.New(discordSession, cfg.GuildID)
 	y.Muses = muses.New(discordSession, y.Queries, cfg)
 	y.Gachi = gachi.New(y.Config.GachiSoundsDataPath)
