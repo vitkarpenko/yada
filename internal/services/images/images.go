@@ -16,7 +16,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/vitkarpenko/yada/internal/spelling"
-	"github.com/vitkarpenko/yada/internal/utils"
 )
 
 const (
@@ -37,14 +36,20 @@ type Service struct {
 
 	discord         *discordgo.Session
 	imagesChannelID string
+	tenorAPIKey     string
 }
 
-func New(discord *discordgo.Session, imagesChannelID string) *Service {
+func New(
+	discord *discordgo.Session,
+	imagesChannelID string,
+	tenorAPIKey string,
+) *Service {
 	service := &Service{
 		discord:         discord,
 		images:          make(map[string]Images),
 		msgsIDsCache:    make(map[string]struct{}),
 		imagesChannelID: imagesChannelID,
+		tenorAPIKey:     tenorAPIKey,
 	}
 	service.loadInBackground()
 	service.cleanCachePeriodically()
@@ -84,15 +89,9 @@ func (s *Service) GetFilesToSend(words []string) []*discordgo.File {
 		seenWords[word] = true
 	}
 	for _, image := range images {
-		if utils.CheckChance(wrongImageChance) {
-			files = append(files,
-				DiscordFileFromImage(s.Random(), uuid.New().String()),
-			)
-		} else {
-			imageToShowIndex := rand.Intn(len(image.Bodies))
-			imageToShow := image.Bodies[imageToShowIndex]
-			files = append(files, DiscordFileFromImage(imageToShow, image.MessageID))
-		}
+		imageToShowIndex := rand.Intn(len(image.Bodies))
+		imageToShow := image.Bodies[imageToShowIndex]
+		files = append(files, DiscordFileFromImage(imageToShow, "image/gif"))
 	}
 
 	if len(files) != 0 {
@@ -254,19 +253,16 @@ func readImageBodyFromAttach(a *discordgo.MessageAttachment) []byte {
 	return imageBody
 }
 
-func (s *Service) Random() Body {
-	bodies := make([]Body, 0)
-	for _, image := range s.images {
-		bodies = append(bodies, image.Bodies...)
+func DiscordFileFromImage(image Body, format string) *discordgo.File {
+	splittedFormat := strings.Split(format, "/")
+	if len(splittedFormat) != 2 {
+		return nil
 	}
+	ext := splittedFormat[1]
 
-	return bodies[rand.Intn(len(bodies))]
-}
-
-func DiscordFileFromImage(image Body, imageID string) *discordgo.File {
 	return &discordgo.File{
-		Name:        fmt.Sprintf("image_%s.gif", imageID),
-		ContentType: "image/gif",
+		Name:        fmt.Sprintf("image_%s.%s", uuid.New().String(), ext),
+		ContentType: format,
 		Reader:      bytes.NewReader(image),
 	}
 }
