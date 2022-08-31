@@ -58,7 +58,6 @@ func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 	if len(files) != 0 {
 		_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Files:     files,
-			Reference: y.refFromMessage(m),
 		})
 		if err != nil {
 			log.Error().Err(err).Msg("Couldn't send an image.")
