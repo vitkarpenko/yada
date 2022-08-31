@@ -52,7 +52,7 @@ func (s *Service) HandleMessage(m *discordgo.MessageCreate) {
 	if err != sql.ErrNoRows {
 		rating = int(savedMuseRating)
 	} else {
-		rating = normDistributedRating(7.7, 1.5)
+		rating = normDistributedRating(7.7, 1.8)
 	}
 
 	var (
