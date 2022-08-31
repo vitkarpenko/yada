@@ -10,4 +10,6 @@ type Config struct {
 	MusesChannelID  string `envconfig:"YADA_MUSES_CHANNEL_ID"`
 
 	GachiSoundsDataPath string `envconfig:"YADA_GACHI_PATH" default:"data/gachi"`
+
+	TenorAPIKey string `envconfig:"TENOR_API_KEY"`
 }

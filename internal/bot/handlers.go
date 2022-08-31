@@ -2,7 +2,6 @@ package bot
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/vitkarpenko/yada/internal/services/images"
 	"github.com/vitkarpenko/yada/internal/tokens"
@@ -10,8 +9,8 @@ import (
 )
 
 const (
-	randomImageChance = 0.01
-	randomEmojiChance = 0.02
+	randomImageChance = 0.1
+	randomEmojiChance = 0.04
 )
 
 func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCreate) {
@@ -46,8 +45,13 @@ func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 
 	var files []*discordgo.File
 	if utils.CheckChance(randomImageChance) {
+		randomImage, err := y.Images.Random()
+		if err != nil {
+			log.Err(err).Msg("Error while fetching random gif")
+			return
+		}
 		files = []*discordgo.File{
-			images.DiscordFileFromImage(y.Images.Random(), uuid.New().String()),
+			images.DiscordFileFromImage(randomImage, "video/mp4"),
 		}
 	} else {
 		files = y.Images.GetFilesToSend(words)
