@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"io/fs"
 
+	_ "github.com/glebarez/go-sqlite"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose/v3"
 	"github.com/rs/zerolog/log"
 )
@@ -16,7 +16,7 @@ func SetEmbedMigrations(embed fs.FS) {
 
 func NewDB() *sql.DB {
 
-	db, err := sql.Open("sqlite3", "data/sqlite.db")
+	db, err := sql.Open("sqlite", ":memory:")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error while creating db")
 	}

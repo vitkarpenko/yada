@@ -9,13 +9,10 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-
-	"github.com/vitkarpenko/yada/internal/spelling"
 )
 
 const (
@@ -217,19 +214,8 @@ func (s *Service) downloader(
 
 func (s *Service) setTokens(triggerWords []string, images Images) {
 	for _, w := range triggerWords {
-		w = strings.ToLower(w)
-
-		var edits []string
-		if utf8.RuneCountInString(w) < minWordLengthToSpellcheck {
-			edits = []string{w}
-		} else {
-			edits = spelling.SimpleEdits(w)
-		}
-
-		for _, edit := range edits {
-			mergedBodies := append(s.images[edit].Bodies, images.Bodies...)
-			s.setBodies(edit, mergedBodies)
-		}
+		mergedBodies := append(s.images[strings.ToLower(w)].Bodies, images.Bodies...)
+		s.setBodies(w, mergedBodies)
 	}
 }
 
