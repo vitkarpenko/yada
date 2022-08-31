@@ -261,7 +261,7 @@ func DiscordFileFromImage(image Body, format string) *discordgo.File {
 	ext := splittedFormat[1]
 
 	return &discordgo.File{
-		Name:        fmt.Sprintf("image_%s.%s", uuid.New().String(), ext),
+		Name:        fmt.Sprintf("file_%s.%s", uuid.New().String(), ext),
 		ContentType: format,
 		Reader:      bytes.NewReader(image),
 	}
