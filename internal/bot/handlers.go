@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	randomImageChance = 0.02
+	randomImageChance = 0.03
 	randomEmojiChance = 0.02
 )
 
