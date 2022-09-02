@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	randomImageChance = 0.03
+	randomImageChance = 0.01
 	randomEmojiChance = 0.02
 )
 
@@ -57,7 +57,7 @@ func (y *Yada) handleImages(m *discordgo.MessageCreate) {
 	files := y.Images.GetFilesToSend(words)
 	if len(files) != 0 {
 		_, err := y.Discord.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Files:     files,
+			Files: files,
 		})
 		if err != nil {
 			log.Error().Err(err).Msg("Couldn't send an image.")
