@@ -11,7 +11,7 @@ import (
 
 type Command struct {
 	AppCommand discordgo.ApplicationCommand
-	Handler    func(s *discordgo.Session, i *discordgo.InteractionCreate)
+	Handler    func(s *discordgo.Session, interaction *discordgo.InteractionCreate)
 }
 
 // Commands maps command names to Command instances.
@@ -76,12 +76,12 @@ func (y *Yada) InitializeCommands() {
 	}
 }
 
-func (y *Yada) ChoiceHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	message := i.ApplicationCommandData().Options[0].StringValue()
+func (y *Yada) ChoiceHandler(s *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	message := interaction.ApplicationCommandData().Options[0].StringValue()
 	words := strings.Split(message, ",")
 	randIndex := rand.Intn(len(words))
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	_ = s.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: fmt.Sprintf(
