@@ -28,31 +28,31 @@ func New(dataPath string) *Service {
 	return service
 }
 
-func (s *Service) Handler(discord *discordgo.Session, i *discordgo.InteractionCreate) {
-	switch i.Interaction.Type {
+func (s *Service) Handler(discord *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	switch interaction.Interaction.Type {
 	case discordgo.InteractionApplicationCommandAutocomplete:
-		options := autocompleteOpts(i, s)
+		options := autocompleteOpts(interaction, s)
 		if len(options) == 0 {
 			return
 		}
-		sendAutocomplete(discord, i, options)
+		sendAutocomplete(discord, interaction, options)
 	case discordgo.InteractionApplicationCommand:
-		fileName := i.ApplicationCommandData().Options[0].StringValue()
+		fileName := interaction.ApplicationCommandData().Options[0].StringValue()
 		file, err := os.ReadFile(filepath.Join(s.dataPath, fileName))
 		if err != nil {
-			sendSoundNotFound(discord, i, fileName)
+			sendSoundNotFound(discord, interaction, fileName)
 			return
 		}
-		sendSound(discord, i, fileName, file)
+		sendSound(discord, interaction, fileName, file)
 	}
 }
 
 func sendSound(
 	discord *discordgo.Session,
-	i *discordgo.InteractionCreate,
+	interaction *discordgo.InteractionCreate,
 	fileName string, file []byte,
 ) {
-	_ = discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	_ = discord.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Files: []*discordgo.File{discordWavFromBytes(fileName, file)},
@@ -62,10 +62,10 @@ func sendSound(
 
 func sendSoundNotFound(
 	discord *discordgo.Session,
-	i *discordgo.InteractionCreate,
+	interaction *discordgo.InteractionCreate,
 	fileName string,
 ) {
-	_ = discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	_ = discord.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: fmt.Sprintf("Не могу найти такой файл: %s... 🤔", fileName),
@@ -74,19 +74,19 @@ func sendSoundNotFound(
 }
 
 func autocompleteOpts(
-	i *discordgo.InteractionCreate, s *Service,
+	interaction *discordgo.InteractionCreate, s *Service,
 ) []*discordgo.ApplicationCommandOptionChoice {
-	query := i.ApplicationCommandData().Options[0].StringValue()
+	query := interaction.ApplicationCommandData().Options[0].StringValue()
 	options := s.complete(query)
 	return options
 }
 
 func sendAutocomplete(
 	discord *discordgo.Session,
-	i *discordgo.InteractionCreate,
+	interaction *discordgo.InteractionCreate,
 	options []*discordgo.ApplicationCommandOptionChoice,
 ) {
-	_ = discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	_ = discord.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionApplicationCommandAutocompleteResult,
 		Data: &discordgo.InteractionResponseData{
 			Choices: options,

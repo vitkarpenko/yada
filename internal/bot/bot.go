@@ -12,6 +12,7 @@ import (
 	"github.com/vitkarpenko/yada/internal/services/gachi"
 	"github.com/vitkarpenko/yada/internal/services/images"
 	"github.com/vitkarpenko/yada/internal/services/muses"
+	"github.com/vitkarpenko/yada/internal/services/reminders"
 	"github.com/vitkarpenko/yada/internal/utils"
 	"github.com/vitkarpenko/yada/storages/sqlite"
 )
@@ -23,10 +24,11 @@ type Yada struct {
 
 	Queries *sqlite.Queries
 
-	Images *images.Service
-	Emojis *emojis.Service
-	Muses  *muses.Service
-	Gachi  *gachi.Service
+	Images    *images.Service
+	Emojis    *emojis.Service
+	Muses     *muses.Service
+	Gachi     *gachi.Service
+	Reminders *reminders.Service
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -53,6 +55,7 @@ func (y *Yada) initServices(discordSession *discordgo.Session, cfg config.Config
 	y.Images = images.New(discordSession, cfg.ImagesChannelID, cfg.TenorAPIKey)
 	y.Emojis = emojis.New(discordSession, cfg.GuildID)
 	y.Muses = muses.New(discordSession, y.Queries, cfg)
+	y.Reminders = reminders.New(discordSession, y.Queries, cfg)
 	y.Gachi = gachi.New(y.Config.GachiSoundsDataPath)
 }
 
@@ -92,9 +95,9 @@ func (y *Yada) setupCommands() {
 
 func (y *Yada) setupHandlers() {
 	// Add slash commands handlers.
-	y.Discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if c, ok := y.Commands[i.ApplicationCommandData().Name]; ok {
-			c.Handler(s, i)
+	y.Discord.AddHandler(func(s *discordgo.Session, interaction *discordgo.InteractionCreate) {
+		if c, ok := y.Commands[interaction.ApplicationCommandData().Name]; ok {
+			c.Handler(s, interaction)
 		}
 	})
 
