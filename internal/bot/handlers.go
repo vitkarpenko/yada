@@ -21,6 +21,7 @@ func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCre
 	y.handleImages(m)
 	y.handleRandomEmoji(m)
 	y.handleMuses(m)
+	y.handleReminders(m)
 }
 
 func (y *Yada) handleRandomEmoji(m *discordgo.MessageCreate) {
@@ -71,6 +72,10 @@ func (y *Yada) handleMuses(m *discordgo.MessageCreate) {
 	}
 
 	y.Muses.HandleMessage(m)
+}
+
+func (y *Yada) handleReminders(m *discordgo.MessageCreate) {
+	y.Reminders.HandleMessage(m)
 }
 
 func (y *Yada) refFromMessage(m *discordgo.MessageCreate) *discordgo.MessageReference {
