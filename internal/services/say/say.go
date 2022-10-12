@@ -118,7 +118,7 @@ func (s *Service) complete(query string) []*discordgo.ApplicationCommandOptionCh
 	for i, m := range matches {
 		choices[i] = &discordgo.ApplicationCommandOptionChoice{
 			Name:  m,
-			Value: m,
+			Value: m + ".mp4",
 		}
 	}
 
