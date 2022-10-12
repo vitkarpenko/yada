@@ -19,3 +19,4 @@
 .env
 
 data/sqlite.db
+data/sounds/

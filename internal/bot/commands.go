@@ -45,10 +45,10 @@ func (y *Yada) InitializeCommands() {
 			},
 			Handler: y.ChoiceHandler,
 		},
-		"gachi": Command{
+		"say": Command{
 			AppCommand: discordgo.ApplicationCommand{
-				Name:        "gachi",
-				Description: "Oh shit, I'm sorry!",
+				Name:        "say",
+				Description: "Now we talkin'",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
 						Type:         discordgo.ApplicationCommandOptionString,
@@ -59,7 +59,7 @@ func (y *Yada) InitializeCommands() {
 					},
 				},
 			},
-			Handler: y.Gachi.Handler,
+			Handler: y.Say.Handler,
 		},
 	}
 

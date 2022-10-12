@@ -154,7 +154,7 @@ func (s *Service) processMessages() {
 		currentLastID = messages[len(messages)-1].ID
 	}
 
-	log.Info().Int("dict_size", len(s.images)).Msg("Downloaded images!")
+	log.Info().Int("quantity", len(s.images)).Msg("Loaded images")
 }
 
 func (s *Service) download(messages []*discordgo.Message) {

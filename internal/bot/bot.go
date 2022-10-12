@@ -9,10 +9,10 @@ import (
 
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/internal/services/emojis"
-	"github.com/vitkarpenko/yada/internal/services/gachi"
 	"github.com/vitkarpenko/yada/internal/services/images"
 	"github.com/vitkarpenko/yada/internal/services/muses"
 	"github.com/vitkarpenko/yada/internal/services/reminders"
+	"github.com/vitkarpenko/yada/internal/services/say"
 	"github.com/vitkarpenko/yada/internal/utils"
 	"github.com/vitkarpenko/yada/storages/sqlite"
 )
@@ -27,7 +27,7 @@ type Yada struct {
 	Images    *images.Service
 	Emojis    *emojis.Service
 	Muses     *muses.Service
-	Gachi     *gachi.Service
+	Say       *say.Service
 	Reminders *reminders.Service
 }
 
@@ -56,7 +56,7 @@ func (y *Yada) initServices(discordSession *discordgo.Session, cfg config.Config
 	y.Emojis = emojis.New(discordSession, cfg.GuildID)
 	y.Muses = muses.New(discordSession, y.Queries, cfg)
 	y.Reminders = reminders.New(discordSession, y.Queries, cfg)
-	y.Gachi = gachi.New(y.Config.GachiSoundsDataPath)
+	y.Say = say.New(y.Config.SoundsDataPath)
 }
 
 func (y *Yada) initDB() {

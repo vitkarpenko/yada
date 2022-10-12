@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/storages/sqlite"
 )
@@ -132,6 +133,7 @@ func (s *Service) loadReminders() error {
 	}
 
 	s.reminders = reminders
+	log.Info().Int("quantity", len(s.reminders)).Msg("Loaded reminders")
 	return nil
 }
 

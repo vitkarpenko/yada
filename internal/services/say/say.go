@@ -1,4 +1,4 @@
-package gachi
+package say
 
 import (
 	"bytes"
@@ -55,7 +55,7 @@ func sendSound(
 	_ = discord.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Files: []*discordgo.File{discordWavFromBytes(fileName, file)},
+			Files: []*discordgo.File{discordMP4FromBytes(fileName, file)},
 		},
 	})
 }
@@ -94,10 +94,10 @@ func sendAutocomplete(
 	})
 }
 
-func discordWavFromBytes(fileName string, data []byte) *discordgo.File {
+func discordMP4FromBytes(fileName string, data []byte) *discordgo.File {
 	file := &discordgo.File{
 		Name:        fileName,
-		ContentType: "audio/x-wav",
+		ContentType: "video/mp4",
 		Reader:      bytes.NewReader(data),
 	}
 	return file
@@ -117,7 +117,7 @@ func (s *Service) complete(query string) []*discordgo.ApplicationCommandOptionCh
 	for i, m := range matches {
 		choices[i] = &discordgo.ApplicationCommandOptionChoice{
 			Name:  m,
-			Value: m + ".wav",
+			Value: m + ".mp4",
 		}
 	}
 
@@ -139,8 +139,8 @@ func (s *Service) setSounds() {
 			if !d.IsDir() {
 				filename := filepath.Base(path)
 				splitted := strings.Split(filename, ".")
-				if len(splitted) != 2 || splitted[1] != "wav" {
-					log.Warn().Msgf("Incorrect gachi sound file '%s', only .wav files are allowed", filename)
+				if len(splitted) != 2 || splitted[1] != "mp4" {
+					log.Warn().Msgf("Incorrect sound file '%s', only .mp4 files are allowed", filename)
 					return nil
 				}
 				s.sounds = append(s.sounds, splitted[0])
@@ -149,4 +149,6 @@ func (s *Service) setSounds() {
 			return nil
 		},
 	)
+
+	log.Info().Int("quantity", len(s.sounds)).Msg("Loaded sounds")
 }

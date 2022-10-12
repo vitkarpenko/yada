@@ -9,7 +9,7 @@ type Config struct {
 	ImagesChannelID string `envconfig:"YADA_IMAGES_CHANNEL_ID"`
 	MusesChannelID  string `envconfig:"YADA_MUSES_CHANNEL_ID"`
 
-	GachiSoundsDataPath string `envconfig:"YADA_GACHI_PATH" default:"data/gachi"`
+	SoundsDataPath string `envconfig:"YADA_SOUNDS_PATH" default:"data/sounds"`
 
 	TenorAPIKey string `envconfig:"TENOR_API_KEY"`
 }
