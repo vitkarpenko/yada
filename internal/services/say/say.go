@@ -55,7 +55,8 @@ func sendSound(
 	_ = discord.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Files: []*discordgo.File{discordMP4FromBytes(fileName, file)},
+			Content: fmt.Sprintf("**%s**", strings.TrimSuffix(fileName, filepath.Ext(fileName))),
+			Files:   []*discordgo.File{discordMP4FromBytes(fileName, file)},
 		},
 	})
 }
@@ -117,7 +118,7 @@ func (s *Service) complete(query string) []*discordgo.ApplicationCommandOptionCh
 	for i, m := range matches {
 		choices[i] = &discordgo.ApplicationCommandOptionChoice{
 			Name:  m,
-			Value: m + ".mp4",
+			Value: m,
 		}
 	}
 
