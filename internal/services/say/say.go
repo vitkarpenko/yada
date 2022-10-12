@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -141,7 +142,7 @@ func (s *Service) setSounds() {
 					log.Warn().Msgf("Incorrect sound file '%s' with extension %s, only .mp4 files are allowed", path, ext)
 					return nil
 				}
-				s.sounds = append(s.sounds, filepath.Base(path))
+				s.sounds = append(s.sounds, strings.TrimSuffix(filepath.Base(path), ext))
 			}
 
 			return nil
