@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -137,13 +136,12 @@ func (s *Service) setSounds() {
 			}
 
 			if !d.IsDir() {
-				filename := filepath.Base(path)
-				splitted := strings.Split(filename, ".")
-				if len(splitted) != 2 || splitted[1] != "mp4" {
-					log.Warn().Msgf("Incorrect sound file '%s', only .mp4 files are allowed", filename)
+				ext := filepath.Ext(path)
+				if ext != ".mp4" {
+					log.Warn().Msgf("Incorrect sound file '%s' with extension %s, only .mp4 files are allowed", path, ext)
 					return nil
 				}
-				s.sounds = append(s.sounds, splitted[0])
+				s.sounds = append(s.sounds, filepath.Base(path))
 			}
 
 			return nil
