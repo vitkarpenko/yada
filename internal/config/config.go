@@ -11,5 +11,5 @@ type Config struct {
 
 	SoundsDataPath string `envconfig:"YADA_SOUNDS_PATH" default:"data/sounds"`
 
-	TenorAPIKey string `envconfig:"TENOR_API_KEY"`
+	TenorAPIKey string `envconfig:"YADA_TENOR_API_KEY"`
 }

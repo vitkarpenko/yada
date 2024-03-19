@@ -71,7 +71,7 @@ func (y *Yada) InitializeCommands() {
 			appCommand,
 		)
 		if err != nil {
-			log.Fatal().Err(err).Msgf("Cannot create '%v' command: %v", appCommand.Name)
+			log.Fatal().Err(err).Msgf("Cannot create '%v' command: %v", appCommand.Name, c.AppCommand.Name)
 		}
 	}
 }

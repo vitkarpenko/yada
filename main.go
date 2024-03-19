@@ -3,13 +3,13 @@ package main
 import (
 	"embed"
 
-	"github.com/joho/godotenv"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/rs/zerolog/log"
-
 	"github.com/vitkarpenko/yada/internal/bot"
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/storages/sqlite"
+
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog/log"
 )
 
 //go:embed migrations/*.sql

@@ -1,15 +1,17 @@
 package bot
 
 import (
-	"github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
 	"github.com/vitkarpenko/yada/internal/tokens"
 	"github.com/vitkarpenko/yada/internal/utils"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
 const (
 	randomImageChance = 0.01
 	randomEmojiChance = 0.02
+	randomGPTChance   = 0.05
 )
 
 func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCreate) {

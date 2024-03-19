@@ -4,9 +4,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
-
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/internal/services/emojis"
 	"github.com/vitkarpenko/yada/internal/services/images"
@@ -15,6 +12,9 @@ import (
 	"github.com/vitkarpenko/yada/internal/services/say"
 	"github.com/vitkarpenko/yada/internal/utils"
 	"github.com/vitkarpenko/yada/storages/sqlite"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
 type Yada struct {
@@ -88,6 +88,7 @@ func (y *Yada) setupInteractions() {
 	y.setupCommands()
 	y.setupHandlers()
 }
+
 func (y *Yada) setupCommands() {
 	y.CleanupCommands()
 	y.InitializeCommands()

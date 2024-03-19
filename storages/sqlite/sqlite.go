@@ -15,7 +15,6 @@ func SetEmbedMigrations(embed fs.FS) {
 }
 
 func NewDB() *sql.DB {
-
 	db, err := sql.Open("sqlite", ":memory:")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error while creating db")

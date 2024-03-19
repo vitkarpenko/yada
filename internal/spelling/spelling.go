@@ -6,7 +6,7 @@ import (
 
 const (
 	letters                   = "abcdefghijklmnopqrstuvwxyzабвгдеёжзиклмнопрстуфхцчшщъыьэюя"
-	minWordLenToCheckSpelling = 4
+	minWordLenToCheckSpelling = 5
 )
 
 type split struct {
