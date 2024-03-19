@@ -1,10 +1,11 @@
 package bot
 
 import (
-	"github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
 	"github.com/vitkarpenko/yada/internal/tokens"
 	"github.com/vitkarpenko/yada/internal/utils"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
 const (

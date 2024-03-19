@@ -10,10 +10,11 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/storages/sqlite"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
 type Service struct {

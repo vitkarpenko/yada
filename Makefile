@@ -12,6 +12,12 @@ run: build stop
 		-v $(PWD)/data:/yada/data \
 		-d yada:$(COMMIT)
 
+fmt/code:
+	gofumpt -l -w .
+
+fmt/imports:
+	gci write --skip-generated -s standard -s 'prefix(github.com/vitkarpenko)' -s default --custom-order .
+
 stop:
 	docker kill yada || true && docker rm yada || true
 
