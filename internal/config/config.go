@@ -12,4 +12,7 @@ type Config struct {
 	SoundsDataPath string `envconfig:"YADA_SOUNDS_PATH" default:"data/sounds"`
 
 	TenorAPIKey string `envconfig:"TENOR_API_KEY"`
+
+	YandexAPIKey         string `envconfig:"YANDEX_API_KEY"`
+	YandexCloudCatalogID string `envconfig:"YANDEX_CLOUD_CATALOG_ID"`
 }

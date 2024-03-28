@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"slices"
+
 	"github.com/vitkarpenko/yada/internal/tokens"
 	"github.com/vitkarpenko/yada/internal/utils"
 
@@ -19,10 +21,21 @@ func (y *Yada) AllMessagesHandler(ds *discordgo.Session, m *discordgo.MessageCre
 		return
 	}
 
+	yadaMentioned := slices.ContainsFunc(m.Mentions, func(u *discordgo.User) bool {
+		return u.ID == ds.State.User.ID
+	})
+
+	if yadaMentioned {
+		y.handleMention(m)
+	}
 	y.handleImages(m)
 	y.handleRandomEmoji(m)
 	y.handleMuses(m)
 	y.handleReminders(m)
+}
+
+func (y *Yada) handleMention(m *discordgo.MessageCreate) {
+	y.GPT.HandleMessage(m)
 }
 
 func (y *Yada) handleRandomEmoji(m *discordgo.MessageCreate) {

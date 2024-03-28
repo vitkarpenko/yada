@@ -24,6 +24,10 @@ func New(discord *discordgo.Session, guildID string) *Service {
 }
 
 func (s *Service) Random() string {
+	if len(s.emojis) == 0 {
+		return ""
+	}
+
 	emoji := s.emojis[rand.Intn(len(s.emojis))]
 	return fmt.Sprintf("<:%s:%s>", emoji.Name, emoji.ID)
 }

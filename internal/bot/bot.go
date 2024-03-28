@@ -6,6 +6,7 @@ import (
 
 	"github.com/vitkarpenko/yada/internal/config"
 	"github.com/vitkarpenko/yada/internal/services/emojis"
+	"github.com/vitkarpenko/yada/internal/services/gpt"
 	"github.com/vitkarpenko/yada/internal/services/images"
 	"github.com/vitkarpenko/yada/internal/services/muses"
 	"github.com/vitkarpenko/yada/internal/services/reminders"
@@ -29,6 +30,7 @@ type Yada struct {
 	Muses     *muses.Service
 	Say       *say.Service
 	Reminders *reminders.Service
+	GPT       *gpt.Service
 }
 
 func NewYada(cfg config.Config) *Yada {
@@ -57,6 +59,7 @@ func (y *Yada) initServices(discordSession *discordgo.Session, cfg config.Config
 	y.Muses = muses.New(discordSession, y.Queries, cfg)
 	y.Reminders = reminders.New(discordSession, y.Queries, cfg)
 	y.Say = say.New(y.Config.SoundsDataPath)
+	y.GPT = gpt.New(discordSession, y.Config.YandexAPIKey, cfg.YandexCloudCatalogID)
 }
 
 func (y *Yada) initDB() {
