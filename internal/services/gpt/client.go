@@ -14,7 +14,7 @@ import (
 
 const (
 	gptURL             = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
-	liteModelMaxTokens = 2000
+	liteModelMaxTokens = 1000
 )
 
 type gptRequestBody struct {
@@ -71,7 +71,7 @@ func newClient(token, catalogID string) client {
 	return client{
 		token:     token,
 		catalogID: catalogID,
-		prompt:    "Ответь так, словно ты - гениальный и сумасшедший изобретатель, хакер, программист, член ордена Адептус Механикус из Warhammer 40k",
+		prompt:    "Ответь так, словно ты - душный, занудливый и въедливый член ордена Адептус Механикус из Warhammer 40k",
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -83,7 +83,7 @@ func (c *client) reply(text string) (string, error) {
 		ModelUri: fmt.Sprintf("gpt://%s/yandexgpt-lite", c.catalogID),
 		CompletionOptions: completionOptions{
 			MaxTokens:   liteModelMaxTokens,
-			Temperature: 1.0,
+			Temperature: 0.6,
 		},
 		Messages: []message{
 			{
