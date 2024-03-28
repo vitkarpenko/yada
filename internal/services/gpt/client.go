@@ -14,7 +14,7 @@ import (
 
 const (
 	gptURL             = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
-	liteModelMaxTokens = 1000
+	liteModelMaxTokens = 2000
 )
 
 type gptRequestBody struct {
